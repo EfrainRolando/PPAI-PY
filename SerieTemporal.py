@@ -1,6 +1,31 @@
+from __future__ import annotations
+from dataclasses import dataclass, field
+from datetime import datetime
+from typing import List
+from MuestraSismica import MuestraSismica
+from EstacionSismologica import EstacionSismologica
+
+
+@dataclass
 class SerieTemporal:
-    def __init__(self, condicionAlarma, fechaHoraInicioRegistroMuestras, fechaHoraRegistro, frecuenciaMuestreo):
-        self.condicionAlarma = condicionAlarma
-        self.fechaHoraInicioRegistroMuestras = fechaHoraInicioRegistroMuestras
-        self.fechaHoraRegistro = fechaHoraRegistro
-        self.frecuenciaMuestreo = frecuenciaMuestreo
+    condicionMarea: str
+    fechaHoraInicioRegistroMuestras: datetime
+    fechaHoraFinRegistroMuestras: datetime
+    frecuenciaMuestreo: float  # Hz
+    estacion: EstacionSismologica
+    muestras: List[MuestraSismica]
+
+    def getDatos(self) -> dict:
+        return {
+            "condicionMarea": self.condicionMarea,
+            "desde": self.fechaHoraInicioRegistroMuestras.isoformat(),
+            "hasta": self.fechaHoraFinRegistroMuestras.isoformat(),
+            "frecuencia": self.frecuenciaMuestreo,
+            "estacion": self.estacion.getCodigoEstacion(),
+        }
+
+    def agregarMuestra(self, muestra: MuestraSismica) -> None:
+        self.muestras.append(muestra)
+
+    def sosDeMiSerie(self, estacion_codigo: str) -> bool:
+        return self.estacion.codigoEstacion == estacion_codigo

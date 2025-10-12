@@ -1,5 +1,11 @@
+from dataclasses import dataclass
+from EstacionSismologica import EstacionSismologica
+
+@dataclass
 class Sismografo:
-    def __init__(self, fechaAdquisicion, identificador, nroSerie):
-        self.fechaAdquisicion = fechaAdquisicion
-        self.identificador = identificador
-        self.nroSerie = nroSerie
+    codigo: str
+    estacion: EstacionSismologica
+    nroSerie: int
+
+    def getDatosSismografo(self) -> dict:
+        return {"codigo": self.codigo, "estacion": self.estacion.getCodigoEstacion()}

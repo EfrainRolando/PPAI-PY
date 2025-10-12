@@ -1,4 +1,10 @@
+from dataclasses import dataclass
+
+
+@dataclass
 class Usuario:
-    def __init__(self, password, nombreUsuario):
-        self.password = password
-        self.nombreUsuario = nombreUsuario
+    nombreUsuario: str
+    contrasena: str
+
+    def getUsuario(self) -> str:
+        return self.nombreUsuario

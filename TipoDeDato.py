@@ -1,4 +1,10 @@
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
 class TipoDeDato:
-    def __init__(self, denominacion, nombreUnidadMedida):
-        self.denominacion = denominacion
-        self.nombreUnidadMedida = nombreUnidadMedida
+    denominacion: str
+    nombreUnidadDeMedida: str
+
+    def obtenerTipoDeDato(self) -> str:
+        return f"{self.denominacion} [{self.nombreUnidadDeMedida}]"

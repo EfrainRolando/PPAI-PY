@@ -1,62 +1,55 @@
+from datetime import datetime, timedelta
+from typing import List, Dict
+
 from datetime import datetime
-
-from Estado import Estado
+from typing import List
 from EventoSismico import EventoSismico
+from Estado import Estado
+from PantallaRevision import PantallaRevision
 from GestorRevisionResultados import GestorRevisionResultados
+from EstacionSismologica import EstacionSismologica
+from SerieTemporal import SerieTemporal
+
+def main():
+    def habilitarPantalla(self) -> None:
+        print("Pantalla habilitada")
+
+    def solicitarSeleccionEventosSismicos(self, eventos: List[Dict]) -> None:
+        print(f"Eventos candidatos: {len(eventos)}")
+
+    def mostrarDatosEventoSismico(self, datos: Dict) -> None:
+        print("Evento seleccionado:", datos["valorMagnitud"], datos["estadoActual"])
+
+    def presentarAcciones(self, acciones: List[str]) -> None:
+        print("Acciones:", acciones)
 
 
-def dt(s: str) -> datetime:
-    return datetime.strptime(s, "%Y-%m-%d %H:%M")
+if __name__ == '__main__':
+    main()
 
-# Asegurate que existen:
-# class Estado: def __init__(self, nombre: str): self.nombre = nombre
-# class CambioEstado: (estado, fechaHoraInicio, fechaHoraFin=None, responsable=None, motivo=None)
-# class EventoSismico: tiene lista cambiosDeEstado y método crearCambioEstado(estado, responsable, fecha)
 
-# ---- Crear 4 eventos "seed" ----
-evento1 = EventoSismico(
-    fechaHoraFin=None,
-    fechaHoraOcurrencia=dt("2025-10-06 09:13"),
-    latitudEpicentro=-32.10, latitudHipocentro=-32.20,
-    longitudEpicentro=-63.80, longitudHipocentro=-63.85,
-    valorMagnitud=3.5,
-)
-evento1.crearCambioEstado(Estado("Evento","Detectado"),    "sensor",    dt("2025-10-06 09:14"))
-evento1.crearCambioEstado(Estado("Evento","ParaRevision"), "analista1", dt("2025-10-06 09:20"))
+def fabricar_evento(lat=-34.6, lon=-58.4, mag=4.2, estado=Estado) -> EventoSismico:
+    est = EstacionSismologica("BUE01", "BsAs", 15.0)
+    serie = SerieTemporal("baja", datetime.now() - timedelta(hours=1), datetime.now(), 100.0, est)
+    e = EventoSismico(
+        fechaHoraFin=None,
+        fechaHoraOcurrencia=datetime.now() - timedelta(minutes=10),
+        latitudEpicentro=lat,
+        latitudHipocentro=lat,
+        longitudEpicentro=lon,
+        longitudHipocentro=lon,
+        valorMagnitud=mag,
+        seriesTemporales=[serie],
+    )
+    e.crearCambioEstado(Estado(estado), responsable="sistema", fecha=datetime.now() - timedelta(minutes=9))
+    return e
 
-evento2 = EventoSismico(
-    fechaHoraFin=None,
-    fechaHoraOcurrencia=dt("2025-10-06 09:25"),
-    latitudEpicentro=-32.11, latitudHipocentro=-32.21,
-    longitudEpicentro=-63.82, longitudHipocentro=-63.87,
-    valorMagnitud=4.8,
-)
-evento2.crearCambioEstado(Estado("Evento","Detectado"),   "sensor",    dt("2025-10-06 09:26"))
-evento2.crearCambioEstado(Estado("Evento","Rechazado"),   "analista2", dt("2025-10-06 09:35"))
 
-evento3 = EventoSismico(
-    fechaHoraFin=None,
-    fechaHoraOcurrencia=dt("2025-10-06 09:40"),
-    latitudEpicentro=-32.12, latitudHipocentro=-32.22,
-    longitudEpicentro=-63.83, longitudHipocentro=-63.88,
-    valorMagnitud=5.1,
-)
-evento3.crearCambioEstado(Estado("Evento", "Detectado"),            "sensor",    dt("2025-10-06 09:41"))
-evento3.crearCambioEstado(Estado("Evento", "ParaRevision"),         "analista1", dt("2025-10-06 09:50"))
-evento3.crearCambioEstado(Estado("Evento", "BloqueadoEnRevision"),  "analista1", dt("2025-10-06 09:55"))
-
-evento4 = EventoSismico(
-    fechaHoraFin=None,
-    fechaHoraOcurrencia=dt("2025-10-06 09:55"),
-    latitudEpicentro=-32.13, latitudHipocentro=-32.23,
-    longitudEpicentro=-63.84, longitudHipocentro=-63.89,
-    valorMagnitud=4.2,
-)
-evento4.crearCambioEstado(Estado("Evento", "Detectado"),    "sensor",    dt("2025-10-06 09:56"))
-evento4.crearCambioEstado(Estado("Evento", "ParaRevision"), "analista1", dt("2025-10-06 10:00"))
-evento4.crearCambioEstado(Estado("Evento", "Aprobado"),     "jefe",      dt("2025-10-06 10:10"))
-
-eventos = [evento1, evento2, evento3, evento4]
-gestor = GestorRevisionResultados
-candidatos = gestor.buscarSismosARevisar(eventos)
-print(candidatos)
+if __name__ == "__main__":
+    eventos = [fabricar_evento(mag=3.1, estado"Detectado"),
+               fabricar_evento(mag=5.0 = "PteRevision")]*\
+    gestor = GestorRevisionResultados(eventos=eventos)
+    gestor.registrarResultado(PantallaRevision())
+    # Simular rechazo según tercera lámina
+    gestor.rechazar("No cumple criterios")
+    print("Estado final:", gestor.eventoSeleccionado.estadoActual().nombre)

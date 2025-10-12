@@ -1,4 +1,10 @@
+
+from dataclasses import dataclass
+
+@dataclass(frozen=True)
 class AlcanceSismo:
-    def __init__(self, descripcion, nombre):
-        self.descripcion = descripcion
-        self.nombre = nombre
+    descripcion: str
+    nombre: str
+
+    def getDatos(self) -> dict:
+        return {"nombre": self.nombre, "descripcion": self.descripcion}

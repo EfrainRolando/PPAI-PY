@@ -1,5 +1,14 @@
+
+from dataclasses import dataclass
+
+@dataclass(frozen=True)
 class ClasificacionSismo:
-    def __init__(self, nombre, kmProfundidadDesde, kmProfundidadHasta):
-        self.nombre = nombre
-        self.kmProfundidadDesde = kmProfundidadDesde
-        self.kmProfundidadHasta = kmProfundidadHasta
+    nombre: str
+    kmProfundidadDesde: float
+    kmProfundidadHasta: float
+
+    def getDatos(self) -> dict:
+        return {
+            "nombre": self.nombre,
+            "profundidadKm": [self.kmProfundidadDesde, self.kmProfundidadHasta],
+        }
