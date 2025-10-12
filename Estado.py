@@ -1,4 +1,6 @@
 class Estado:
-    def __init__(self, ambito, nombreEstado):
-        self.ambito = ambito
-        self.nombreEstado = nombreEstado
+    nombreEstado = string
+
+    def sosAutoDetectado(self):
+        if Estado.nombreEstado == "AutoDetectado":
+            return True
