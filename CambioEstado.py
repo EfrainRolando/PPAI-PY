@@ -7,9 +7,9 @@ from Estado import Estado
 class CambioEstado:
     estado: Estado
     fechaHoraInicio: datetime
-    fechaHoraFin: datetime
-    responsable: str
-    motivo: str
+    responsable: Optional[str]
+    fechaHoraFin: Optional[datetime] = None
+    motivo: Optional[str] = None
 
     def cerrar(self, fin: datetime) -> None:
         self.fechaHoraFin = fin

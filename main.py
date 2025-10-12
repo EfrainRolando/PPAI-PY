@@ -1,8 +1,6 @@
 from datetime import datetime, timedelta
 from typing import List, Dict
 
-from datetime import datetime
-from typing import List
 from EventoSismico import EventoSismico
 from Estado import Estado
 from PantallaRevision import PantallaRevision
@@ -10,27 +8,18 @@ from GestorRevisionResultados import GestorRevisionResultados
 from EstacionSismologica import EstacionSismologica
 from SerieTemporal import SerieTemporal
 
-def main():
-    def habilitarPantalla(self) -> None:
-        print("Pantalla habilitada")
 
-    def solicitarSeleccionEventosSismicos(self, eventos: List[Dict]) -> None:
-        print(f"Eventos candidatos: {len(eventos)}")
-
-    def mostrarDatosEventoSismico(self, datos: Dict) -> None:
-        print("Evento seleccionado:", datos["valorMagnitud"], datos["estadoActual"])
-
-    def presentarAcciones(self, acciones: List[str]) -> None:
-        print("Acciones:", acciones)
-
-
-if __name__ == '__main__':
-    main()
-
-
-def fabricar_evento(lat=-34.6, lon=-58.4, mag=4.2, estado=Estado) -> EventoSismico:
-    est = EstacionSismologica("BUE01", "BsAs", 15.0)
-    serie = SerieTemporal("baja", datetime.now() - timedelta(hours=1), datetime.now(), 100.0, est)
+def fabricar_evento(lat=-34.6, lon=-58.4, mag=4.2, estado="Detectado") -> EventoSismico:
+    est = EstacionSismologica(
+        codigoEstacion="BUE01",
+        nombre="BsAs",
+        documentoCertificacion="DOC123",
+        fechaSolicitudCertificacion=datetime(2024, 5, 1),
+        nroCertificacionAdquisicion=999,
+        latitud=121,
+        longitud=11,
+    )
+    serie = SerieTemporal("baja", datetime.now() - timedelta(hours=1), datetime.now(), 100.0, est, muestras=[0.12, 0.15, 0.10, 0.05, -0.02, -0.10, -0.08])
     e = EventoSismico(
         fechaHoraFin=None,
         fechaHoraOcurrencia=datetime.now() - timedelta(minutes=10),
@@ -39,17 +28,30 @@ def fabricar_evento(lat=-34.6, lon=-58.4, mag=4.2, estado=Estado) -> EventoSismi
         longitudEpicentro=lon,
         longitudHipocentro=lon,
         valorMagnitud=mag,
+        alcance=None,  # por ahora
+        clasificacion=None,  # por ahora
+        origenGeneracion=None,  # por ahora
         seriesTemporales=[serie],
+        cambiosDeEstado=[]
     )
     e.crearCambioEstado(Estado(estado), responsable="sistema", fecha=datetime.now() - timedelta(minutes=9))
     return e
 
 
-if __name__ == "__main__":
-    eventos = [fabricar_evento(mag=3.1, estado"Detectado"),
-               fabricar_evento(mag=5.0 = "PteRevision")]*\
+def main():
+    eventos = [
+        fabricar_evento(mag=3.1, estado="Detectado"),
+        fabricar_evento(mag=5.0, estado="PteRevision")
+    ]
+
     gestor = GestorRevisionResultados(eventos=eventos)
-    gestor.registrarResultado(PantallaRevision())
-    # Simular rechazo según tercera lámina
+    pantalla = PantallaRevision()
+
+    gestor.registrarResultado(pantalla)
     gestor.rechazar("No cumple criterios")
+
     print("Estado final:", gestor.eventoSeleccionado.estadoActual().nombre)
+
+
+if __name__ == '__main__':
+    main()

@@ -13,7 +13,7 @@ class SerieTemporal:
     fechaHoraFinRegistroMuestras: datetime
     frecuenciaMuestreo: float  # Hz
     estacion: EstacionSismologica
-    muestras: List[MuestraSismica]
+    muestras: List[float] = field(default_factory=list)
 
     def getDatos(self) -> dict:
         return {

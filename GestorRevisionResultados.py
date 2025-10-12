@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -8,12 +7,14 @@ from Estado import Estado
 from Sesion import Sesion
 from PantallaRevision import PantallaRevision
 
+
 @dataclass
 class GestorRevisionResultados:
-    eventos: List[EventoSismico]
-    sesion: Sesion
-    pantalla: PantallaRevision
-    eventoSeleccionado: EventoSismico
+    def __init__(self, eventos, sesion=None, pantalla=None, eventoSeleccionado=None):
+        self.eventos = eventos
+        self.sesion = sesion
+        self.pantalla = pantalla
+        self.eventoSeleccionado = eventoSeleccionado
 
     # --- Primera parte del diagrama ---
     def buscarSismosARevisar(self) -> List[EventoSismico]:
@@ -42,7 +43,8 @@ class GestorRevisionResultados:
 
     def rechazar(self, motivo: str = "Datos inválidos") -> None:
         if not self.eventoSeleccionado: return
-        self.eventoSeleccionado.rechazarEvento(datetime.now(), self.sesion.getUsuarioLogueado() if self.sesion else "sistema", motivo)
+        self.eventoSeleccionado.rechazarEvento(datetime.now(),
+                                               self.sesion.getUsuarioLogueado() if self.sesion else "sistema", motivo)
 
     # --- Flujo principal utilitario para demo ---
     def registrarResultado(self, pantalla: PantallaRevision) -> None:

@@ -29,7 +29,7 @@ class EventoSismico:
     def getDatosSismo(self) -> dict:
         base = asdict(self)
         base["seriesTemporales"] = [s.getDatos() for s in self.seriesTemporales]
-        base["estadoActual"] = self.estadoActual().nombre.name if self.cambiosDeEstado else None
+        base["estadoActual"] = self.estadoActual().nombre if self.cambiosDeEstado else None
         return base
 
     def estadoActual(self) -> Estado:
@@ -53,10 +53,10 @@ class EventoSismico:
         return self.estadoActual().sosParaRevision()
 
     def bloquearEvento(self, fecha: datetime, responsable: str) -> None:
-        self.crearCambioEstado(Estado.nombre, responsable, fecha)
+        self.crearCambioEstado(Estado("Bloqueado"), responsable, fecha)
 
     def rechazarEvento(self, fecha: datetime, responsable: str, motivo: str) -> None:
-        ce = self.crearCambioEstado(Estado.nombre, responsable, fecha)
+        ce = self.crearCambioEstado(Estado("Rechazado"), responsable, fecha)
         ce.motivo = motivo
 
     # Accesores usados por los lifelines

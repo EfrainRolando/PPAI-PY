@@ -5,7 +5,7 @@ from dataclasses import dataclass
 @dataclass
 class EstacionSismologica:
     codigoEstacion: str
-    laltitud: float
+    latitud: float
     longitud: float
     nombre: str
     documentoCertificacion: []
