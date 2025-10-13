@@ -47,10 +47,7 @@ def main():
     gestor = GestorRevisionResultados(eventos=eventos)
     pantalla = PantallaRevision()
 
-    gestor.registrarResultado(pantalla)
-    gestor.rechazar("No cumple criterios")
-
-    print("Estado final:", gestor.eventoSeleccionado.estadoActual().nombre)
+    pantalla.opcionRegistrarResultado()
 
 
 if __name__ == '__main__':
