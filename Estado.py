@@ -1,21 +1,11 @@
-from dataclasses import dataclass
 
-
-@dataclass
 class Estado:
-    nombre: str
-    ambitoES: bool = True  # True = del CU 'ES' (gestor), False = de otro módulo
+    def __init__(self, nombre: str):
+        self.nombre = nombre
 
-    def esAmbitoES(self) -> bool:
-        return self.ambitoES
+    # ✅ Métodos de consulta
+    def sosAutoDetectado(self) -> bool:
+        return self.nombre == "AutoDetectado"
 
-    # Consultas del diagrama
-    def sosAutoDetectado(evento) -> bool:
-        if evento.nombre == "AutoDetectado":
-            return True
-
-    def sosParaRevision(self) -> bool: return self.nombre == "PteRevision"
-
-    def sosBloqueadoEnRevision(self) -> bool: return self.nombre == "BloqEnRevision"
-
-    def sosRechazado(self) -> bool: return self.nombre == "Rechazado"
+    def sosParaRevision(self) -> bool:
+        return self.nombre == "ParaRevision"

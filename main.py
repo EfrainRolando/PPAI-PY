@@ -1,57 +1,47 @@
-from datetime import datetime, timedelta
-from typing import List, Dict
-
-from EventoSismico import EventoSismico
+from datetime import datetime
 from Estado import Estado
-from PantallaRevision import PantallaRevision
-from GestorRevisionResultados import GestorRevisionResultados
-from EstacionSismologica import EstacionSismologica
-from SerieTemporal import SerieTemporal
+from CambioEstado import CambioEstado
+from EventoSismico import EventoSismico
 
+# Simulamos estados
+e_auto = Estado("AutoDetectado")
+e_rev = Estado("ParaRevision")
 
-def fabricar_evento(lat=-34.6, lon=-58.4, mag=4.2, estado="Detectado") -> EventoSismico:
-    est = EstacionSismologica(
-        codigoEstacion="BUE01",
-        nombre="BsAs",
-        documentoCertificacion="DOC123",
-        fechaSolicitudCertificacion=datetime(2024, 5, 1),
-        nroCertificacionAdquisicion=999,
-        latitud=121,
-        longitud=11,
-    )
-    serie = SerieTemporal("baja", datetime.now() - timedelta(hours=1), datetime.now(), 100.0, est,
-                          muestras=[0.12, 0.15, 0.10, 0.05, -0.02, -0.10, -0.08])
-    e = EventoSismico(
-        fechaHoraFin=None,
-        fechaHoraOcurrencia=datetime.now() - timedelta(minutes=10),
-        latitudEpicentro=lat,
-        latitudHipocentro=lat,
-        longitudEpicentro=lon,
-        longitudHipocentro=lon,
-        valorMagnitud=mag,
-        alcance=None,  # por ahora
-        clasificacion=None,  # por ahora
-        origenGeneracion=None,  # por ahora
-        seriesTemporales=[serie],
-        cambiosDeEstado=[]
-    )
-    e.crearCambioEstado(Estado(estado), responsable="sistema", fecha=datetime.now() - timedelta(minutes=9))
-    return e
+# Simulamos eventos
+ev1 = EventoSismico(
+    id_evento=1,
+    cambiosEstado=[CambioEstado(e_auto, datetime.now(), 'User')],
+    fechaHoraFin=datetime.now(),
+    fechaHoraOcurrencia=datetime.now(),
+    latitudEpicentro=-31.4,
+    latitudHipocentro=-31.5,
+    longitudEpicentro=-64.2,
+    longitudHipocentro=-64.3,
+    valorMagnitud=5.2,
+    alcance=None,
+    clasificacion=None,
+    origenGeneracion=None,
+    seriesTemporales=[]
+)
 
+ev2 = EventoSismico(
+    id_evento=2,
+    cambiosEstado=[CambioEstado(e_rev, datetime.now(), 'User')],
+    fechaHoraFin=datetime.now(),
+    fechaHoraOcurrencia=datetime.now(),
+    latitudEpicentro=-30.1,
+    latitudHipocentro=-30.2,
+    longitudEpicentro=-63.8,
+    longitudHipocentro=-63.9,
+    valorMagnitud=3.8,
+    alcance=None,
+    clasificacion=None,
+    origenGeneracion=None,
+    seriesTemporales=[]
+)
 
-def main():
-    eventos = [
-        fabricar_evento(mag=3.1, estado="AutoDetectado"),
-        fabricar_evento(mag=5.0, estado="PteRevision")
-    ]
-
-    gestor = GestorRevisionResultados(eventos=eventos)
-    pantalla = PantallaRevision(gestor)
-
-    gestor = GestorRevisionResultados(eventos)  # eventos = [e1, e2, ...]
-    eventosAD = gestor.buscarSismosARevisar()
-    print(eventosAD)
-
-
-if __name__ == '__main__':
-    main()
+# Prueba del método de clase
+lista = [ev1, ev2]
+for evento in EventoSismico.buscarSismosARevisar(lista):
+    ultimo_Cambio = evento.cambiosEstado[-1]
+    print('Evento:', evento.id_evento, '---|  Estado Evento:', ultimo_Cambio.estado.nombre)

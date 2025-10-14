@@ -9,7 +9,7 @@ from Estado import Estado
 
 @dataclass
 class GestorRevisionResultados:
-    eventos: List[EventoSismico] = field(default_factory=list)
+    eventos: List[EventoSismico]
     sesion: object | None = None
     eventoSeleccionado: EventoSismico | None = None
 

@@ -13,20 +13,14 @@ class CambioEstado:
         self.responsable = responsable
         self.motivo = motivo
 
-    def estaAbierto(self) -> bool:
+    def sosActual(self) -> bool:
         return self.fechaHoraFin is None
 
-    # ⚠️ NO @classmethod, NO @staticmethod
-    def sosAutoDetectado(self) -> bool:
-        # si Estado tiene helpers:
-        try:
-            return self.estado.sosDetectado()
-        except AttributeError:
-            # si Estado solo tiene .nombre (string)
-            return (getattr(self.estado, "nombre", "") or "").strip().lower() == "detectado"
+    @classmethod
+    def sosAutoDetectado(cls, evento) -> bool:
+        """ Devuelve True si algún cambio del evento tiene estado AutoDetectado """
+        for cambio in evento.cambiosEstado:
+            if cambio.estado.sosAutoDetectado():
+                return True
+        return False
 
-    def sosParaRevision(self) -> bool:
-        try:
-            return self.estado.sosParaRevision()
-        except AttributeError:
-            return (getattr(self.estado, "nombre", "") or "").strip().lower() == "pararevision"
