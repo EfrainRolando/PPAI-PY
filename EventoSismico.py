@@ -1,7 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass, field, asdict
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Iterable
 from CambioEstado import CambioEstado
 from Estado import Estado
 from SerieTemporal import SerieTemporal
@@ -26,52 +26,37 @@ class EventoSismico:
     cambiosDeEstado: List[CambioEstado]
 
     # Consultas/Comandos
-    def getDatosSismo(self) -> dict:
-        base = asdict(self)
-        base["seriesTemporales"] = [s.getDatos() for s in self.seriesTemporales]
-        base["estadoActual"] = self.estadoActual().nombre if self.cambiosDeEstado else None
-        return base
+    def getActualCambioDeEstado(self):
+        for ce in reversed(self.cambiosDeEstado):
+            # tolerante si olvidás estaAbierto en algún lado
+            if hasattr(ce, "estaAbierto"):
+                if ce.estaAbierto():
+                    return ce
+            else:
+                if getattr(ce, "fechaHoraFin", None) is None:
+                    return ce
+        return self.cambiosDeEstado[-1] if self.cambiosDeEstado else None
 
-    def estadoActual(self) -> Estado:
-        if not self.cambiosDeEstado:
-            raise ValueError("Evento sin estado")
-        return self.cambiosDeEstado[-1].estado
+    def estadoActual(self):
+        ce = self.getActualCambioDeEstado()
+        return ce.estado if ce else None
 
-    def crearCambioEstado(self, estado: Estado, responsable: Optional[str], fecha: datetime) -> CambioEstado:
-        # cerrar el actual si existe
-        if self.cambiosDeEstado and self.cambiosDeEstado[-1].fechaHoraFin is None:
-            self.cambiosDeEstado[-1].cerrar(fecha)
-        nuevo = CambioEstado(estado=estado, fechaHoraInicio=fecha, responsable=responsable)
-        self.cambiosDeEstado.append(nuevo)
-        return nuevo
+    @staticmethod
+    def buscarSismosARevisar(eventos):
+        candidatos = []
+        for e in eventos:
+            ce = e.getActualCambioDeEstado()
+            if not ce:
+                continue
+            # 👇 Llamadas de **instancia**, no a la clase
+            if ce.sosAutoDetectado() or ce.sosParaRevision():
+                candidatos.append(e)
+        # si existe:
+        try:
+            candidatos.sort(key=lambda x: x.getFechaHoraOcurrencia())
+        except Exception:
+            pass
+        return candidatos
 
-    # Helpers del diagrama
-    def sosAutoDetectado(self) -> bool:
-        return self.estadoActual().sosDetectado()
-
-    def sosParaRevision(self) -> bool:
-        return self.estadoActual().sosParaRevision()
-
-    def bloquearEvento(self, fecha: datetime, responsable: str) -> None:
-        self.crearCambioEstado(Estado("Bloqueado"), responsable, fecha)
-
-    def rechazarEvento(self, fecha: datetime, responsable: str, motivo: str) -> None:
-        ce = self.crearCambioEstado(Estado("Rechazado"), responsable, fecha)
-        ce.motivo = motivo
-
-    # Accesores usados por los lifelines
-    def getFechaHoraOcurrencia(self) -> datetime:
-        return self.fechaHoraOcurrencia
-
-    def getUbicacionOcurrencia(self) -> tuple:
-        return self.latitudEpicentro, self.longitudEpicentro
-
-    def getMagnitud(self) -> float:
-        return self.valorMagnitud
-
-    # series
-    def obtenerDatosSeriesTemporales(self) -> List[dict]:
-        return [s.getDatos() for s in self.seriesTemporales]
-
-    def agregarSerieTemporal(self, serie: SerieTemporal) -> None:
-        self.seriesTemporales.append(serie)
+    def crearCambioEstado(self, param, responsable, fecha):
+        pass

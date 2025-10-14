@@ -3,19 +3,30 @@ from datetime import datetime
 from typing import Optional
 from Estado import Estado
 
+
 @dataclass
 class CambioEstado:
-    estado: Estado
-    fechaHoraInicio: datetime
-    responsable: Optional[str]
-    fechaHoraFin: Optional[datetime] = None
-    motivo: Optional[str] = None
+    def __init__(self, estado, fechaHoraInicio, responsable, motivo=None, fechaHoraFin=None):
+        self.estado = estado
+        self.fechaHoraInicio = fechaHoraInicio
+        self.fechaHoraFin = fechaHoraFin
+        self.responsable = responsable
+        self.motivo = motivo
 
-    def cerrar(self, fin: datetime) -> None:
-        self.fechaHoraFin = fin
+    def estaAbierto(self) -> bool:
+        return self.fechaHoraFin is None
 
-    # atajos 'set*' del diagrama
-    def setFechaYHoraInicio(self, ts: datetime): self.fechaHoraInicio = ts
-    def setEstado(self, estado: Estado): self.estado = estado
-    def setResponsable(self, nombre: str): self.responsable = nombre
-    def setMotivo(self, texto: str): self.motivo = texto
+    # ⚠️ NO @classmethod, NO @staticmethod
+    def sosAutoDetectado(self) -> bool:
+        # si Estado tiene helpers:
+        try:
+            return self.estado.sosDetectado()
+        except AttributeError:
+            # si Estado solo tiene .nombre (string)
+            return (getattr(self.estado, "nombre", "") or "").strip().lower() == "detectado"
+
+    def sosParaRevision(self) -> bool:
+        try:
+            return self.estado.sosParaRevision()
+        except AttributeError:
+            return (getattr(self.estado, "nombre", "") or "").strip().lower() == "pararevision"

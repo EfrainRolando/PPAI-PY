@@ -1,9 +1,12 @@
 from typing import Protocol, List, Dict
 
-import GestorRevisionResultados
+from GestorRevisionResultados import GestorRevisionResultados
 
 
 class PantallaRevision:
+    def __init__(self, gestor: GestorRevisionResultados):
+        self.gestor = gestor
+
     def habilitarPantalla(self) -> None:
         GestorRevisionResultados.registrarResultado(self)
         print("Pantalla habilitada")

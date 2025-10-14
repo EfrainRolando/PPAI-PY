@@ -19,7 +19,8 @@ def fabricar_evento(lat=-34.6, lon=-58.4, mag=4.2, estado="Detectado") -> Evento
         latitud=121,
         longitud=11,
     )
-    serie = SerieTemporal("baja", datetime.now() - timedelta(hours=1), datetime.now(), 100.0, est, muestras=[0.12, 0.15, 0.10, 0.05, -0.02, -0.10, -0.08])
+    serie = SerieTemporal("baja", datetime.now() - timedelta(hours=1), datetime.now(), 100.0, est,
+                          muestras=[0.12, 0.15, 0.10, 0.05, -0.02, -0.10, -0.08])
     e = EventoSismico(
         fechaHoraFin=None,
         fechaHoraOcurrencia=datetime.now() - timedelta(minutes=10),
@@ -40,14 +41,16 @@ def fabricar_evento(lat=-34.6, lon=-58.4, mag=4.2, estado="Detectado") -> Evento
 
 def main():
     eventos = [
-        fabricar_evento(mag=3.1, estado="Detectado"),
+        fabricar_evento(mag=3.1, estado="AutoDetectado"),
         fabricar_evento(mag=5.0, estado="PteRevision")
     ]
 
     gestor = GestorRevisionResultados(eventos=eventos)
-    pantalla = PantallaRevision()
+    pantalla = PantallaRevision(gestor)
 
-    pantalla.opcionRegistrarResultado()
+    gestor = GestorRevisionResultados(eventos)  # eventos = [e1, e2, ...]
+    eventosAD = gestor.buscarSismosARevisar()
+    print(eventosAD)
 
 
 if __name__ == '__main__':

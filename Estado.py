@@ -10,7 +10,12 @@ class Estado:
         return self.ambitoES
 
     # Consultas del diagrama
-    def sosDetectado(self) -> bool: return self.nombre == "Detectado"
+    def sosAutoDetectado(evento) -> bool:
+        if evento.nombre == "AutoDetectado":
+            return True
+
     def sosParaRevision(self) -> bool: return self.nombre == "PteRevision"
+
     def sosBloqueadoEnRevision(self) -> bool: return self.nombre == "BloqEnRevision"
+
     def sosRechazado(self) -> bool: return self.nombre == "Rechazado"
