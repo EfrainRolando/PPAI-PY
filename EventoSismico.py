@@ -27,11 +27,13 @@ class EventoSismico:
 
     # ✅ Método de clase usado por el Gestor
     @classmethod
-    def buscarSismosARevisar(cls, lista_eventos: List[EventoSismico]) -> List[EventoSismico]:
+    def buscarSismosARevisar(cls, lista_eventos: List["EventoSismico"]) -> List["EventoSismico"]:
         eventos_a_revisar = []
+
         for e in lista_eventos:
-            if CambioEstado.sosAutoDetectado(e):
-                eventos_a_revisar.append(e)
-                return eventos_a_revisar
+            for cambio in e.cambiosEstado:
+                if cambio.sosAutoDetectado() and cambio.esActual():
+                    eventos_a_revisar.append(e)
+                    break  # No hace falta seguir revisando los demás cambios de este evento
 
-
+        return eventos_a_revisar
