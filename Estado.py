@@ -7,5 +7,5 @@ class Estado:
     def sosAutoDetectado(self) -> bool:
         return self.nombre == "AutoDetectado"
 
-    def sosParaRevision(self) -> bool:
-        return self.nombre == "ParaRevision"
+    def sosPteRevision(self) -> bool:
+        return self.nombre == "PteRevision"

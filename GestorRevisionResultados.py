@@ -1,22 +1,29 @@
 from __future__ import annotations
-from dataclasses import dataclass, field
 from datetime import datetime
-from typing import List, Optional, Iterable
+from typing import List, Optional, Any
 
 from EventoSismico import EventoSismico
-from Estado import Estado
 
 
-@dataclass
 class GestorRevisionResultados:
-    eventos: List[EventoSismico]
-    sesion: object | None = None
-    eventoSeleccionado: EventoSismico | None = None
+    def __init__(self, eventos: List[EventoSismico], sesion: Optional[object] = None):
+        self.eventos = list(eventos)
+        self.sesion = sesion
+        self.eventoSeleccionado: Optional[EventoSismico] = None
 
-    # --- Primera parte del diagrama ---
-    def registrarResultado(self) -> None:
+    def registrarResultado(self) -> List[Any]:
         print("Gestor Creado!")
+        items = EventoSismico.buscarSismosARevisar(self.eventos)
+        return self.ordenarEventoSismicoFechaOcurrencia(items)
 
-    def buscarSismosARevisar(self):
-        # Delego al estático de EventoSismico
-        return EventoSismico.buscarSismosARevisar(self.eventos)
+    def buscarSismosARevisar(self) -> List[Any]:
+        items = EventoSismico.buscarSismosARevisar(self.eventos)
+        return self.ordenarEventoSismicoFechaOcurrencia(items)
+
+    def ordenarEventoSismicoFechaOcurrencia(self, items: List[Any], descendente: bool = False) -> List[Any]:
+        def key_fn(x):
+            if isinstance(x, dict):
+                return x.get("fechaHoraOcurrencia", datetime.min)
+            return getattr(x, "fechaHoraOcurrencia", datetime.min)
+
+        return sorted(items, key=key_fn, reverse=descendente)

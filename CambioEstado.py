@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Optional
 from Estado import Estado
 
+
 class CambioEstado:
     def __init__(self, estado: Estado, fechaHoraInicio: datetime,
                  responsable: str, motivo: Optional[str] = None,
@@ -19,3 +20,7 @@ class CambioEstado:
     def sosAutoDetectado(self) -> bool:
         # delega en Estado.sosAuto()
         return self.estado.sosAutoDetectado()
+
+    def sosPteRevision(self) -> bool:
+        # delega en Estado.sosPteRevision()
+        return self.estado.sosPteRevision()
