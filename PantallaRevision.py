@@ -1,5 +1,7 @@
 from __future__ import annotations
 from typing import List
+
+from EventoSismico import EventoSismico
 from GestorRevisionResultados import GestorRevisionResultados
 
 
@@ -24,3 +26,7 @@ class PantallaRevision:
                 f"Epi(lat:{d['latitudEpicentro']}, lon:{d['longitudEpicentro']}) | "
                 f"Hipo(lat:{d['latitudHipocentro']}, lon:{d['longitudHipocentro']})"
             )
+
+    def solicitarSeleccionEventoSismico(self) -> EventoSismico:
+        eleccion = int(input('Seleccione un evento a modificar:'))
+        return GestorRevisionResultados.tomarSeleccionEventoSismico(self.gestor, eleccion)

@@ -16,6 +16,7 @@ class GestorRevisionResultados:
         datos_ordenados = self.ordenarEventosPorFechaOcurrencia(datos)
         from PantallaRevision import PantallaRevision
         PantallaRevision().mostrarDatosEventosSismicos(datos_ordenados)
+        EventoSeleccionado = PantallaRevision().solicitarSeleccionEventoSismico()
 
     def buscarSismosARevisar(self) -> List[dict]:
         """Filtra los eventos que deben ser revisados"""
@@ -31,3 +32,8 @@ class GestorRevisionResultados:
             datos,
             key=lambda d: d.get("fechaHoraOcurrencia", datetime.min)
         )
+
+    def tomarSeleccionEventoSismico(self, eleccion) -> EventoSismico:
+        for e in self.eventos:
+            if eleccion == e.id_evento:
+                return e

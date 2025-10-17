@@ -24,7 +24,7 @@ def obtener_eventos_predeterminados() -> List[EventoSismico]:
     )
 
     e2 = EventoSismico(
-        id_evento=2, cambiosEstado=[c1], fechaHoraFin=None,
+        id_evento=2, cambiosEstado=[c3, c2], fechaHoraFin=None,
         fechaHoraOcurrencia=dt("2025-10-06 09:25"),
         latitudEpicentro=-32.11, latitudHipocentro=-32.21,
         longitudEpicentro=-63.82, longitudHipocentro=-63.87,
