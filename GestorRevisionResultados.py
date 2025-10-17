@@ -1,29 +1,33 @@
 from __future__ import annotations
+from typing import List, Any, Optional
 from datetime import datetime
-from typing import List, Optional, Any
-
 from EventoSismico import EventoSismico
+from repositorio_eventos import obtener_eventos_predeterminados
 
 
 class GestorRevisionResultados:
-    def __init__(self, eventos: List[EventoSismico], sesion: Optional[object] = None):
-        self.eventos = list(eventos)
-        self.sesion = sesion
-        self.eventoSeleccionado: Optional[EventoSismico] = None
+    def __init__(self) -> None:
+        self.eventos: List[EventoSismico] = obtener_eventos_predeterminados()
+        self.vista: Optional[object] = None
 
-    def registrarResultado(self) -> List[Any]:
-        print("Gestor Creado!")
-        items = EventoSismico.buscarSismosARevisar(self.eventos)
-        return self.ordenarEventoSismicoFechaOcurrencia(items)
+    def registrarResultado(self) -> None:
+        print("Gestor creado → registrando resultado...")
+        datos = self.buscarSismosARevisar()
+        datos_ordenados = self.ordenarEventosPorFechaOcurrencia(datos)
+        from PantallaRevision import PantallaRevision
+        PantallaRevision().mostrarDatosEventosSismicos(datos_ordenados)
 
-    def buscarSismosARevisar(self) -> List[Any]:
-        items = EventoSismico.buscarSismosARevisar(self.eventos)
-        return self.ordenarEventoSismicoFechaOcurrencia(items)
+    def buscarSismosARevisar(self) -> List[dict]:
+        """Filtra los eventos que deben ser revisados"""
+        eventos_a_revisar = []
+        for e in self.eventos:
+            if e.buscarSismosARevisar():
+                eventos_a_revisar.append(e.getDatosSismos())
+        return eventos_a_revisar
 
-    def ordenarEventoSismicoFechaOcurrencia(self, items: List[Any], descendente: bool = False) -> List[Any]:
-        def key_fn(x):
-            if isinstance(x, dict):
-                return x.get("fechaHoraOcurrencia", datetime.min)
-            return getattr(x, "fechaHoraOcurrencia", datetime.min)
-
-        return sorted(items, key=key_fn, reverse=descendente)
+    def ordenarEventosPorFechaOcurrencia(self, datos: List[dict]) -> List[dict]:
+        """Ordena los eventos según su fechaHoraOcurrencia"""
+        return sorted(
+            datos,
+            key=lambda d: d.get("fechaHoraOcurrencia", datetime.min)
+        )

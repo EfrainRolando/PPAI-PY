@@ -1,32 +1,26 @@
 from __future__ import annotations
-from typing import Protocol, List, Dict
-from EventoSismico import EventoSismico
+from typing import List
 from GestorRevisionResultados import GestorRevisionResultados
-from repositorio_eventos import obtener_eventos_predeterminados
 
 
 class PantallaRevision:
-    def __init__(self):
-        self.gestor: GestorRevisionResultados | None = None
+    def __init__(self) -> None:
+        self.gestor: GestorRevisionResultados = GestorRevisionResultados()
 
-    # ← ÚNICO método que llamará main()
     def opcionRegistrarResultado(self) -> None:
+        """Método principal invocado por el actor AS"""
         self.habilitarPantalla()
-        eventos: List[EventoSismico] = obtener_eventos_predeterminados()
-        self.gestor = GestorRevisionResultados(eventos)
-        datos = self.gestor.registrarResultado()
-        self.mostrarDatosEventosSismicos(datos)
+        self.gestor.registrarResultado()
 
     def habilitarPantalla(self) -> None:
         print("Pantalla habilitada")
 
-    def mostrarDatosEventosSismicos(self, datos: list[dict]) -> None:
+    def mostrarDatosEventosSismicos(self, datos: List[dict]) -> None:
+        """Muestra los eventos que cumplen el criterio"""
         print("Eventos a revisar:")
         for d in datos:
-            if not isinstance(d, dict):
-                continue
             print(
                 f"- #{d['id_evento']} | {d['fechaHoraOcurrencia']} | M{d['magnitud']} | "
                 f"Epi(lat:{d['latitudEpicentro']}, lon:{d['longitudEpicentro']}) | "
-                f"Hipo(lat:{d['latitudHipocentro']}, lon:{d['longitudHipocentro']}) |"
+                f"Hipo(lat:{d['latitudHipocentro']}, lon:{d['longitudHipocentro']})"
             )
