@@ -1,10 +1,10 @@
+from dataclasses import dataclass, asdict
 
-from dataclasses import dataclass
 
-@dataclass(frozen=True)
+@dataclass
 class AlcanceSismo:
-    descripcion: str
     nombre: str
+    descripcion: str = ""
 
     def getDatos(self) -> dict:
-        return {"nombre": self.nombre, "descripcion": self.descripcion}
+        return asdict(self)

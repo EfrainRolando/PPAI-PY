@@ -84,3 +84,16 @@ class EventoSismico:
         print("Estado Actual del Evento:", self.cambioEstadoActual.estado.nombre)
         print("Fecha Hora Inicio del Cambio de estado:", self.cambioEstadoActual.fechaHoraInicio)
         return bloqueado
+
+    def getDatosEvento(self) -> dict:
+        def _d(obj, base): return obj.getDatos() if obj else base
+
+        return {
+            "id_evento": self.id_evento,
+            "fechaHoraOcurrencia": self.fechaHoraOcurrencia,
+            "coordenadas": {"lat": self.latitudEpicentro, "lon": self.longitudEpicentro},
+            "magnitud": self.valorMagnitud,
+            "alcance": _d(self.alcance, {"nombre": "(sin datos)", "descripcion": ""}),
+            "clasificacion": _d(self.clasificacion, {"nombre": "(sin datos)", "escala": ""}),
+            "origen": _d(self.origenGeneracion, {"nombre": "(sin datos)", "detalle": ""}),
+        }

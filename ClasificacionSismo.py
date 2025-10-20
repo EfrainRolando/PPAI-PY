@@ -1,14 +1,11 @@
+from dataclasses import dataclass, asdict
 
-from dataclasses import dataclass
 
-@dataclass(frozen=True)
+@dataclass
 class ClasificacionSismo:
     nombre: str
     kmProfundidadDesde: float
     kmProfundidadHasta: float
 
     def getDatos(self) -> dict:
-        return {
-            "nombre": self.nombre,
-            "profundidadKm": [self.kmProfundidadDesde, self.kmProfundidadHasta],
-        }
+        return asdict(self)

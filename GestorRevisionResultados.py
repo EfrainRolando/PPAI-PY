@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, Any, Optional, Iterable, Type
+from typing import List, Any, Optional, Iterable, Type, Dict
 from datetime import datetime
 
 from Estado import Estado
@@ -8,7 +8,7 @@ from repositorio_eventos import obtener_eventos_predeterminados
 
 
 class GestorRevisionResultados:
-    def __init__(self) -> None:
+    def __init__(self):
         self.eventos: List[EventoSismico] = obtener_eventos_predeterminados()
 
     def registrarResultado(self) -> None:
@@ -21,7 +21,8 @@ class GestorRevisionResultados:
         EstadoBloqueado = self.buscarEstadoBloqueadoEnRevision()
         fechaHoraActual = self.getFechaYHoraActual()
         self.cambiarEstadoABloqueadoEnRevision(EventoSeleccionado, EstadoBloqueado, fechaHoraActual)
-        # self.buscarDatosEventoSismico()
+        datos = self.buscarDatosEventoSismico(EventoSeleccionado)
+        PantallaRevision().mostrarDatosEventoSismico(datos)
 
     def buscarSismosARevisar(self) -> List[dict]:
         """Filtra los eventos que deben ser revisados"""
@@ -56,4 +57,8 @@ class GestorRevisionResultados:
     def cambiarEstadoABloqueadoEnRevision(self, EventoSeleccionado, estadoBloqueado: Estado, fechaHoraInicio) -> None:
         EventoSismico.bloquearEvento(EventoSeleccionado, estadoBloqueado, fechaHoraInicio)
 
-# def buscarDatosEventoSismico(self):
+    def buscarDatosEventoSismico(self, evento: EventoSismico) -> Dict[str, Any]:
+        EventoSismico.eventoSeleccionado = evento
+        return {
+            "evento": evento.getDatosEvento()
+        }

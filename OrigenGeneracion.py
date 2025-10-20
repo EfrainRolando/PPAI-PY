@@ -1,10 +1,10 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 
 
-@dataclass(frozen=True)
+@dataclass
 class OrigenDeGeneracion:
-    descripcion: str
-    nombre: str
+    nombre: str  # p.ej. "Tectónico", "Volcánico"
+    descripcion: str = ""
 
     def getDatos(self) -> dict:
-        return {"nombre": self.nombre, "descripcion": self.descripcion}
+        return asdict(self)
