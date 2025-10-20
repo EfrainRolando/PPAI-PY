@@ -24,3 +24,6 @@ class CambioEstado:
     def sosPteRevision(self) -> bool:
         # delega en Estado.sosPteRevision()
         return self.estado.sosPteRevision()
+
+    def setFechaHoraFin(self, fechaHoraFin):
+        self.fechaHoraFin = fechaHoraFin

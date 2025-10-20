@@ -10,9 +10,9 @@ dt = lambda s: datetime.strptime(s, "%Y-%m-%d %H:%M")
 
 def obtener_eventos_predeterminados() -> List[EventoSismico]:
     # Cambios “ya hechos”
-    c1 = CambioEstado(Estado("AutoDetectado"), dt("2025-10-06 09:14"), "sensor", fechaHoraFin=dt("2025-10-06 09:20"))
-    c2 = CambioEstado(Estado("PteRevision"), dt("2025-10-06 09:20"), "analista")
-    c3 = CambioEstado(Estado("AutoDetectado"), dt("2025-10-06 09:26"), "sensor")
+    c1 = CambioEstado(Estado("AutoDetectado", "EventoSismico"), dt("2025-10-06 09:14"), "sensor", fechaHoraFin=dt("2025-10-06 09:20"))
+    c2 = CambioEstado(Estado("PteRevision", "EventoSismico"), dt("2025-10-06 09:20"), "analista")
+    c3 = CambioEstado(Estado("AutoDetectado", "EventoSismico"), dt("2025-10-06 09:26"), "sensor")
 
     e1 = EventoSismico(
         id_evento=1, cambiosEstado=[c1, c2], fechaHoraFin=None,
