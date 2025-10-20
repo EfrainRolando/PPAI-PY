@@ -1,7 +1,8 @@
 from __future__ import annotations
 from datetime import datetime
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Type
 from CambioEstado import CambioEstado
+from Estado import Estado
 from SerieTemporal import SerieTemporal
 from AlcanceSismo import AlcanceSismo
 from ClasificacionSismo import ClasificacionSismo
@@ -67,7 +68,7 @@ class EventoSismico:
             "longitudHipocentro": self.longitudHipocentro
         }
 
-    def bloquearEvento(self, estadoBloqueado, fechaHora):
+    def bloquearEvento(self, estadoBloqueado: Estado, fechaHora):
         for c in self.cambiosEstado:
             if CambioEstado.esActual(c):
                 c.setFechaHoraFin(fechaHora)
@@ -75,11 +76,11 @@ class EventoSismico:
                 break
 
     def crearCambioEstado(self, estadoBloqueado, fechaHora) -> CambioEstado:
-        bloqueado = CambioEstado(estadoBloqueado, fechaHora, responsable="Usuario")
+        bloqueado = CambioEstado(estado=estadoBloqueado, fechaHoraInicio=fechaHora, responsable="Usuario")
         self.cambiosEstado.append(bloqueado)
         self.cambioEstadoActual = bloqueado
         print("Cambio de estado actualizado!")
         print("Evento:", self.id_evento)
-        print("Estado Actual del Evento:", self.cambioEstadoActual.estado)
+        print("Estado Actual del Evento:", self.cambioEstadoActual.estado.nombre)
         print("Fecha Hora Inicio del Cambio de estado:", self.cambioEstadoActual.fechaHoraInicio)
         return bloqueado
