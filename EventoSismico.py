@@ -70,16 +70,16 @@ class EventoSismico:
     def bloquearEvento(self, estadoBloqueado, fechaHora):
         for c in self.cambiosEstado:
             if CambioEstado.esActual(c):
-                self.cambioEstadoActual = c
-        self.cambioEstadoActual.setFechaHoraFin(fechaHora)
-        bloqueado = CambioEstado(
-            estado=estadoBloqueado,
-            fechaHoraInicio=fechaHora,
-            responsable="User"
-        )
+                c.setFechaHoraFin(fechaHora)
+                self.crearCambioEstado(estadoBloqueado, fechaHora)
+                break
+
+    def crearCambioEstado(self, estadoBloqueado, fechaHora) -> CambioEstado:
+        bloqueado = CambioEstado(estadoBloqueado, fechaHora, responsable="Usuario")
         self.cambiosEstado.append(bloqueado)
         self.cambioEstadoActual = bloqueado
         print("Cambio de estado actualizado!")
         print("Evento:", self.id_evento)
         print("Estado Actual del Evento:", self.cambioEstadoActual.estado)
         print("Fecha Hora Inicio del Cambio de estado:", self.cambioEstadoActual.fechaHoraInicio)
+        return bloqueado

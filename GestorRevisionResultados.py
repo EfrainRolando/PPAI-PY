@@ -18,9 +18,10 @@ class GestorRevisionResultados:
         from PantallaRevision import PantallaRevision
         PantallaRevision().mostrarDatosEventosSismicos(datos_ordenados)
         EventoSeleccionado = PantallaRevision().solicitarSeleccionEventoSismico()
-        EstadoBloqueado = self.buscarEstadoBloqueado()
+        EstadoBloqueado = self.buscarEstadoBloqueadoEnRevision()
         fechaHoraActual = self.getFechaYHoraActual()
-        EventoSeleccionado.bloquearEvento(EstadoBloqueado, fechaHoraActual)
+        self.cambiarEstadoABloqueadoEnRevision(EventoSeleccionado, EstadoBloqueado, fechaHoraActual)
+        #self.buscarDatosEventoSismico()
 
     def buscarSismosARevisar(self) -> List[dict]:
         """Filtra los eventos que deben ser revisados"""
@@ -42,7 +43,7 @@ class GestorRevisionResultados:
             if eleccion == e.id_evento:
                 return e
 
-    def buscarEstadoBloqueado(self) -> str:
+    def buscarEstadoBloqueadoEnRevision(self) -> str:
         for a in Estado.AMBITOS_POSIBLES:
             AEV = 0
             if a == "EventoSismico":
@@ -53,3 +54,9 @@ class GestorRevisionResultados:
 
     def getFechaYHoraActual(self) -> datetime:
         return datetime.now()
+
+    def cambiarEstadoABloqueadoEnRevision(self, EventoSeleccionado, estadoBloqueado, fechaHoraInicio) -> None:
+        EventoSismico.bloquearEvento(EventoSeleccionado, estadoBloqueado, fechaHoraInicio)
+
+   # def buscarDatosEventoSismico(self):
+

@@ -27,3 +27,9 @@ class CambioEstado:
 
     def setFechaHoraFin(self, fechaHoraFin):
         self.fechaHoraFin = fechaHoraFin
+
+    def setFechaHoraInicio(self, fechaHoraInicio):
+        self.fechaHoraInicio = fechaHoraInicio
+
+    def setEstadoBloqueado(self, estadoBloqueado):
+        self.estado = estadoBloqueado
