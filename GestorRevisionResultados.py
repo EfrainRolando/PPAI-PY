@@ -25,6 +25,8 @@ class GestorRevisionResultados:
         PantallaRevision().mostrarDatosEventoSismico(datos)
         self.imprimir_series_evento(
             EventoSeleccionado)  # Metodo que no pertenece al diagrama, pero sirve para mostrar las series temporales en consola o en el front
+        # self.llamarCUGenerarSismograma
+        self.habilitarOpcionMapa()
 
     def buscarSismosARevisar(self) -> List[dict]:
         """Filtra los eventos que deben ser revisados"""
@@ -125,3 +127,10 @@ class GestorRevisionResultados:
                     if denom or unidad:
                         sufijo_tipo = f"  → Tipo: {_fmt(denom)} ({_fmt(unidad)})"
                     print(f"        - Detalle {k}: valor={_fmt(val)}{sufijo_tipo}")
+
+    def habilitarOpcionMapa(self) -> bool:
+        from PantallaRevision import PantallaRevision
+        PantallaRevision().solicitarOpcionMapa()
+
+    def tomarSeleccionMapa(self, Opcion):
+        return print("Opcion Elegida:", Opcion)

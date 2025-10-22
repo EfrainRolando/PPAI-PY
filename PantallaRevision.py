@@ -59,3 +59,7 @@ class PantallaRevision:
         if devolver_str:
             return texto
         print(texto)
+
+    def solicitarOpcionMapa(self):
+        OpMapa = input("Desea Visualizar el mapa?") #Agregar botones de si o no en el front
+        return GestorRevisionResultados.tomarSeleccionMapa(GestorRevisionResultados(), OpMapa )
