@@ -23,7 +23,8 @@ class GestorRevisionResultados:
         self.cambiarEstadoABloqueadoEnRevision(EventoSeleccionado, EstadoBloqueado, fechaHoraActual)
         datos = self.buscarDatosEventoSismico(EventoSeleccionado)
         PantallaRevision().mostrarDatosEventoSismico(datos)
-        self.imprimir_series_evento(EventoSeleccionado)  #Metodo que no pertenece al diagrama, pero sirve para mostrar las series temporales en consola o en el front
+        self.imprimir_series_evento(
+            EventoSeleccionado)  # Metodo que no pertenece al diagrama, pero sirve para mostrar las series temporales en consola o en el front
 
     def buscarSismosARevisar(self) -> List[dict]:
         """Filtra los eventos que deben ser revisados"""
@@ -86,6 +87,11 @@ class GestorRevisionResultados:
             freq = s.get("frecuencia")
             # soporta tu versión previa ("Muestras")
             muestras = s.get("muestras") or s.get("Muestras") or []
+            codigo = (
+                    s.get("codigoEstacion")
+                    or s.get("Codigo Estacion")
+                    or s.get("CodigoEstacion")  # por si en algún lado quedó sin espacio
+            )
 
             print(f"\n— Serie {i} —")
             print(f"  Condición de marea : {_fmt(condicion)}")
@@ -93,6 +99,7 @@ class GestorRevisionResultados:
             print(f"  Hasta              : {_fmt(hasta)}")
             print(f"  Frecuencia         : {_fmt(freq)} Hz")
             print(f"  Muestras           : {len(muestras)}")
+            print(f"  Estación           : {_fmt(codigo)}")
 
             if not muestras:
                 print("    (Sin muestras)")

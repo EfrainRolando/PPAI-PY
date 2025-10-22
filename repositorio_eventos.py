@@ -39,14 +39,10 @@ def obtener_eventos_predeterminados() -> List[EventoSismico]:
         OrigenDeGeneracion("Volcánico", "Por actividad magmática"),
         OrigenDeGeneracion("Inducido", "Por actividad humana"),
     ]
-    estaciones = [
-        EstacionSismologica("CBA-01", -31.41, -64.19),
-        EstacionSismologica("CBA-02", -31.35, -64.21),
-        EstacionSismologica("CBA-03", -31.46, -64.20)
-    ]
 
     # Construcción de Series/Muestras/Detalles
     st1 = SerieTemporal(
+        id=1,
         condicionMarea="Normal",
         fechaHoraInicioRegistroMuestras=dt("2025-10-06 09:14"),
         fechaHoraFinRegistroMuestras=dt("2025-10-06 09:20"),
@@ -63,6 +59,7 @@ def obtener_eventos_predeterminados() -> List[EventoSismico]:
         ],
     )
     st2 = SerieTemporal(
+        id=2,
         condicionMarea="Normal",
         fechaHoraInicioRegistroMuestras=dt("2025-10-06 09:20"),
         fechaHoraFinRegistroMuestras=dt("2025-10-06 09:26"),
@@ -73,6 +70,7 @@ def obtener_eventos_predeterminados() -> List[EventoSismico]:
         ],
     )
     st3 = SerieTemporal(
+        id=3,
         condicionMarea="Alta",
         fechaHoraInicioRegistroMuestras=dt("2025-10-06 09:26"),
         fechaHoraFinRegistroMuestras=dt("2025-10-06 09:30"),
@@ -82,19 +80,15 @@ def obtener_eventos_predeterminados() -> List[EventoSismico]:
         ],
     )
     st4 = SerieTemporal(
+        id=4,
         condicionMarea="Baja",
         fechaHoraInicioRegistroMuestras=dt("2025-10-06 09:17"),
         fechaHoraFinRegistroMuestras=dt("2025-10-06 09:19"),
         frecuenciaMuestreo=100.0,
         muestras=[
             MuestraSismica(dt("2025-10-06 09:18"), [DetalleMuestraSismica(0.006)]),
-        ],
+        ]
     )
-    Sismógrafos = [
-        Sismografo("SG-001", estaciones[1], seriesTemporales=[st1, st3]),
-        Sismografo("SG-002", estaciones[0], seriesTemporales=[st4]),
-        Sismografo("SG-003", estaciones[2], seriesTemporales=[st2])
-    ]
 
     e1 = EventoSismico(
         id_evento=1, cambiosEstado=[c1, c2], fechaHoraFin=None,
@@ -115,3 +109,64 @@ def obtener_eventos_predeterminados() -> List[EventoSismico]:
     )
 
     return [e1, e2]
+
+
+def obtenerSismografos() -> list[Sismografo]:
+    estaciones = [
+        EstacionSismologica("CBA-01", -31.41, -64.19),
+        EstacionSismologica("CBA-02", -31.35, -64.21),
+        EstacionSismologica("CBA-03", -31.46, -64.20)
+    ]
+    st1 = SerieTemporal(
+        id=1,
+        condicionMarea="Normal",
+        fechaHoraInicioRegistroMuestras=dt("2025-10-06 09:14"),
+        fechaHoraFinRegistroMuestras=dt("2025-10-06 09:20"),
+        frecuenciaMuestreo=100.0,
+        muestras=[
+            MuestraSismica(dt("2025-10-06 09:15"), [
+                DetalleMuestraSismica(0.012),
+                DetalleMuestraSismica(0.20),
+            ]),
+            MuestraSismica(dt("2025-10-06 09:16"), [
+                DetalleMuestraSismica(0.018),
+                DetalleMuestraSismica(0.50),
+            ]),
+        ],
+    )
+    st2 = SerieTemporal(
+        id=2,
+        condicionMarea="Normal",
+        fechaHoraInicioRegistroMuestras=dt("2025-10-06 09:20"),
+        fechaHoraFinRegistroMuestras=dt("2025-10-06 09:26"),
+        frecuenciaMuestreo=200.0,
+        muestras=[
+            MuestraSismica(dt("2025-10-06 09:21"), [DetalleMuestraSismica(0.009)]),
+            MuestraSismica(dt("2025-10-06 09:22"), [DetalleMuestraSismica(0.12)]),
+        ],
+    )
+    st3 = SerieTemporal(
+        id=3,
+        condicionMarea="Alta",
+        fechaHoraInicioRegistroMuestras=dt("2025-10-06 09:26"),
+        fechaHoraFinRegistroMuestras=dt("2025-10-06 09:30"),
+        frecuenciaMuestreo=50.0,
+        muestras=[
+            MuestraSismica(dt("2025-10-06 09:26"), [DetalleMuestraSismica(0.35)]),
+        ],
+    )
+    st4 = SerieTemporal(
+        id=4,
+        condicionMarea="Baja",
+        fechaHoraInicioRegistroMuestras=dt("2025-10-06 09:17"),
+        fechaHoraFinRegistroMuestras=dt("2025-10-06 09:19"),
+        frecuenciaMuestreo=100.0,
+        muestras=[
+            MuestraSismica(dt("2025-10-06 09:18"), [DetalleMuestraSismica(0.006)]),
+        ]
+    )
+
+    s1 = Sismografo("SG-001", estaciones[1], seriesTemporales=[st1, st3])
+    s2 = Sismografo("SG-002", estaciones[0], seriesTemporales=[st4])
+    s3 = Sismografo("SG-003", estaciones[2], seriesTemporales=[st2])
+    return [s1, s2, s3]
