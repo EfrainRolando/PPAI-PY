@@ -1,10 +1,17 @@
 from dataclasses import dataclass
+from typing import Optional
 
 
-@dataclass(frozen=True)
 class TipoDeDato:
-    denominacion: str
-    nombreUnidadDeMedida: str
+    denominacion: Optional[str]
+    nombreUnidadDeMedida: Optional[str]
 
-    def obtenerTipoDeDato(self) -> str:
-        return f"{self.denominacion} [{self.nombreUnidadDeMedida}]"
+    def __init__(self, denominacion: Optional[str] = None, nombreUnidadDeMedida: Optional[str] = None):
+        self.denominacion = denominacion
+        self.nombreUnidadDeMedida = nombreUnidadDeMedida
+
+    def obtenerTipoDeDato(self) -> dict:
+        return {
+            "denominacion": self.denominacion,
+            "nombreUnidadDeMedida": self.nombreUnidadDeMedida,
+        }

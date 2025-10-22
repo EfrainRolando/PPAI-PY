@@ -97,3 +97,7 @@ class EventoSismico:
             "clasificacion": _d(self.clasificacion, {"nombre": "(sin datos)", "escala": ""}),
             "origen": _d(self.origenGeneracion, {"nombre": "(sin datos)", "detalle": ""}),
         }
+
+    def getDatosSeriesTemporales(self) -> list[dict]:
+        return [s.getDatos() for s in (self.seriesTemporales or [])]
+

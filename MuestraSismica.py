@@ -1,28 +1,25 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import List
-from TipoDeDato import TipoDeDato
+from typing import List, Optional
+
+from DetalleMuestraSismica import DetalleMuestraSismica
 
 
-@dataclass
-class DetalleMuestraSismica:
-    valor: float
-    tipoDato: TipoDeDato
-
-    def obtenerDatosDetalleMuestra(self) -> dict:
-        return {"valor": self.valor, "tipo": self.tipoDato.obtenerTipoDeDato()}
-
-
-@dataclass
 class MuestraSismica:
-    fechaHoraMuestra: datetime
-    detalles: List[DetalleMuestraSismica] = field(default_factory=list)
+    fechaHoraMuestra: Optional[datetime]
+    detalles: List["DetalleMuestraSismica"]
+
+    def __init__(self,
+                 fechaHoraMuestra: Optional[datetime] = None,
+                 detalles: Optional[List["DetalleMuestraSismica"]] = None):
+        self.fechaHoraMuestra = fechaHoraMuestra
+        self.detalles = list(detalles) if detalles is not None else []
 
     def obtenerDatosMuestraSismica(self) -> dict:
         return {
-            "fechaHoraMuestra": self.fechaHoraMuestra.isoformat(),
-            "detalles": [d.obtenerDatosDetalleMuestra() for d in self.detalles]
+            "fechaHoraMuestra": self.fechaHoraMuestra.isoformat() if self.fechaHoraMuestra else None,
+            "detalles": [d.obtenerDatosDetalleMuestras() for d in (self.detalles or [])],
         }
 
     def agregarDetalle(self, detalle: DetalleMuestraSismica) -> None:
