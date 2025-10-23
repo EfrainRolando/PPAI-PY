@@ -27,6 +27,9 @@ class GestorRevisionResultados:
             EventoSeleccionado)  # Metodo que no pertenece al diagrama, pero sirve para mostrar las series temporales en consola o en el front
         # self.llamarCUGenerarSismograma
         self.habilitarOpcionMapa()
+        self.habilitarModificaciones(EventoSeleccionado)
+        datos = self.buscarDatosEventoSismico(EventoSeleccionado)
+        PantallaRevision().mostrarDatosEventoSismico(datos)
 
     def buscarSismosARevisar(self) -> List[dict]:
         """Filtra los eventos que deben ser revisados"""
@@ -134,3 +137,17 @@ class GestorRevisionResultados:
 
     def tomarSeleccionMapa(self, Opcion):
         return print("Opcion Elegida:", Opcion)
+
+    def habilitarModificaciones(self, evento: EventoSismico):
+        from PantallaRevision import PantallaRevision
+        PantallaRevision().solicitarModificaciones(evento)
+
+    def tomarModificaciones(self, nuevoOrigenNombre, nuevoOrigenDescripcion, nuevoAlcanceNombre,
+                            nuevoAlcanceDescripcion, nuevoMagnitud, evento: EventoSismico):
+        EventoSismico.EventoSeleccionado = evento
+        evento.setNuevoOrigen(nuevoOrigenNombre, nuevoOrigenDescripcion)
+        evento.setNuevoAlcance(nuevoAlcanceNombre, nuevoAlcanceDescripcion)
+        evento.setNuevaMagnitud(nuevoMagnitud)
+        return {
+            "evento": evento.getDatosEvento()
+        }

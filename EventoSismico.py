@@ -101,3 +101,14 @@ class EventoSismico:
     def getDatosSeriesTemporales(self) -> list[dict]:
         return [s.getDatos() for s in (self.seriesTemporales or [])]
 
+    def setNuevoOrigen(self, nuevoOrigenNombre, nuevoOrigenDescripcion):
+        self.origenGeneracion.nombre = nuevoOrigenNombre
+        self.origenGeneracion.descripcion = nuevoOrigenDescripcion
+
+    def setNuevoAlcance(self, nuevoAlcanceNombre, nuevoAlcanceDescripcion):
+        self.alcance.nombre = nuevoAlcanceNombre
+        self.alcance.descripcion = nuevoAlcanceDescripcion
+
+    def setNuevaMagnitud(self, nuevoMagnitud):
+        self.valorMagnitud = nuevoMagnitud
+

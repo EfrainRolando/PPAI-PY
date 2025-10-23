@@ -61,5 +61,19 @@ class PantallaRevision:
         print(texto)
 
     def solicitarOpcionMapa(self):
-        OpMapa = input("Desea Visualizar el mapa?") #Agregar botones de si o no en el front
-        return GestorRevisionResultados.tomarSeleccionMapa(GestorRevisionResultados(), OpMapa )
+        OpMapa = input("Desea Visualizar el mapa?")  # Agregar botones de si o no en el front
+        return GestorRevisionResultados.tomarSeleccionMapa(GestorRevisionResultados(), OpMapa)
+
+    def solicitarModificaciones(self, evento: EventoSismico):
+        opcion = input("Desea Modificar los datos del Evento? (S-N)")
+        if opcion == "S":
+            nuevoMagnitud = input("Ingrese la magnitud del evento")
+            nuevoAlcanceNombre = input("Ingrese el nombre del alcance del evento")
+            nuevoAlcanceDescripcion = input("Ingrese la descripcion del alcance del evento")
+            nuevoOrigenNombre = input("Ingrese el Nombre del Origen del evento")
+            nuevoOrigenDescripcion = input("Ingrese la descripcion del Origen del evento")
+            return self.gestor.tomarModificaciones(nuevoOrigenNombre, nuevoOrigenDescripcion, nuevoAlcanceNombre,nuevoAlcanceDescripcion, nuevoMagnitud, evento)
+        else:
+            return print("Sin Modificaciones")
+
+
