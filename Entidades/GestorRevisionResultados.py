@@ -2,10 +2,10 @@ from __future__ import annotations
 from typing import List, Any, Optional, Iterable, Type, Dict
 from datetime import datetime
 
-from Estado import Estado
-from EventoSismico import EventoSismico
-from Sesion import Sesion
-from repositorio_eventos import obtener_eventos_predeterminados
+from Entidades.Estado import Estado
+from Entidades.EventoSismico import EventoSismico
+from Entidades.Sesion import Sesion
+from Entidades.repositorio_eventos import obtener_eventos_predeterminados
 
 
 class GestorRevisionResultados:
@@ -17,7 +17,7 @@ class GestorRevisionResultados:
         print("Gestor creado → registrando resultado...")
         datos = self.buscarSismosARevisar()
         datos_ordenados = self.ordenarEventosPorFechaOcurrencia(datos)
-        from PantallaRevision import PantallaRevision
+        from Entidades.PantallaRevision import PantallaRevision
         PantallaRevision(self.sesion).mostrarDatosEventosSismicos(datos_ordenados)
         EventoSeleccionado = PantallaRevision(self.sesion).solicitarSeleccionEventoSismico()
         EstadoBloqueado = self.buscarEstadoBloqueadoEnRevision()
@@ -144,14 +144,14 @@ class GestorRevisionResultados:
                     print(f"        - Detalle {k}: valor={_fmt(val)}{sufijo_tipo}")
 
     def habilitarOpcionMapa(self) -> bool:
-        from PantallaRevision import PantallaRevision
+        from Entidades.PantallaRevision import PantallaRevision
         PantallaRevision(self.sesion).solicitarOpcionMapa()
 
     def tomarSeleccionMapa(self, Opcion):
         return print("Opcion Elegida:", Opcion)
 
     def habilitarModificaciones(self, evento: EventoSismico):
-        from PantallaRevision import PantallaRevision
+        from Entidades.PantallaRevision import PantallaRevision
         PantallaRevision(self.sesion).solicitarModificaciones(evento)
 
     def tomarModificaciones(self, nuevoOrigenNombre, nuevoOrigenDescripcion, nuevoAlcanceNombre,

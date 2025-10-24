@@ -1,8 +1,8 @@
 from __future__ import annotations
 from typing import List, Dict, Any
 
-from EventoSismico import EventoSismico
-from GestorRevisionResultados import GestorRevisionResultados
+from Entidades.EventoSismico import EventoSismico
+from Entidades.GestorRevisionResultados import GestorRevisionResultados
 
 
 class PantallaRevision:

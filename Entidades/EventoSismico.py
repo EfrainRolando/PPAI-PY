@@ -1,12 +1,12 @@
 from __future__ import annotations
 from datetime import datetime
 from typing import List, Optional, Dict, Any, Type
-from CambioEstado import CambioEstado
-from Estado import Estado
-from SerieTemporal import SerieTemporal
-from AlcanceSismo import AlcanceSismo
-from ClasificacionSismo import ClasificacionSismo
-from OrigenGeneracion import OrigenDeGeneracion
+from Entidades.CambioEstado import CambioEstado
+from Entidades.Estado import Estado
+from Entidades.SerieTemporal import SerieTemporal
+from Entidades.AlcanceSismo import AlcanceSismo
+from Entidades.ClasificacionSismo import ClasificacionSismo
+from Entidades.OrigenGeneracion import OrigenDeGeneracion
 
 
 class EventoSismico:

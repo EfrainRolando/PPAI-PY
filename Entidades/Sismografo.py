@@ -1,9 +1,9 @@
 from dataclasses import dataclass
 from typing import Optional
 
-import repositorio_eventos
-from EstacionSismologica import EstacionSismologica
-from SerieTemporal import SerieTemporal
+import Entidades.repositorio_eventos
+from Entidades.EstacionSismologica import EstacionSismologica
+from Entidades.SerieTemporal import SerieTemporal
 
 
 class Sismografo:
@@ -30,7 +30,7 @@ class Sismografo:
 
     # (Opcional, para paso 13 del diagrama)
     def sosDeMiSerie(self: "SerieTemporal") -> Optional[str]:
-        sismografos = repositorio_eventos.obtenerSismografos()
+        sismografos = Entidades.repositorio_eventos.obtenerSismografos()
         for s in sismografos:
             for a in s.seriesTemporales:
                 if getattr(a, "id", None) == getattr(self, "id", None):

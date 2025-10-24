@@ -2,8 +2,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import List, Optional, Tuple, Dict
-from MuestraSismica import MuestraSismica
-from EstacionSismologica import EstacionSismologica
+from Entidades.MuestraSismica import MuestraSismica
+from Entidades.EstacionSismologica import EstacionSismologica
 
 
 class SerieTemporal:
@@ -30,7 +30,7 @@ class SerieTemporal:
         self.muestras = list(muestras) if muestras else []
 
     def getDatos(self) -> dict[str, str | None | float | list[dict] | str]:
-        from Sismografo import Sismografo
+        from Entidades.Sismografo import Sismografo
         return {
             "condicionMarea": self.condicionMarea,
             "desde": self.fechaHoraInicioRegistroMuestras.isoformat()

@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import List, Optional
 
-from DetalleMuestraSismica import DetalleMuestraSismica
+from Entidades.DetalleMuestraSismica import DetalleMuestraSismica
 
 
 class MuestraSismica:

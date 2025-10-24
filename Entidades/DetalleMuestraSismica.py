@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Optional
 
-from TipoDeDato import TipoDeDato
+from Entidades.TipoDeDato import TipoDeDato
 
 
 class DetalleMuestraSismica:

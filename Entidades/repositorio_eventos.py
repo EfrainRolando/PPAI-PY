@@ -1,17 +1,17 @@
 from datetime import datetime, date
 from typing import List
 
-from AlcanceSismo import AlcanceSismo
-from ClasificacionSismo import ClasificacionSismo
-from DetalleMuestraSismica import DetalleMuestraSismica
-from EstacionSismologica import EstacionSismologica
-from Estado import Estado
-from CambioEstado import CambioEstado
-from EventoSismico import EventoSismico
-from MuestraSismica import MuestraSismica
-from OrigenGeneracion import OrigenDeGeneracion
-from SerieTemporal import SerieTemporal
-from Sismografo import Sismografo
+from Entidades.AlcanceSismo import AlcanceSismo
+from Entidades.ClasificacionSismo import ClasificacionSismo
+from Entidades.DetalleMuestraSismica import DetalleMuestraSismica
+from Entidades.EstacionSismologica import EstacionSismologica
+from Entidades.Estado import Estado
+from Entidades.CambioEstado import CambioEstado
+from Entidades.EventoSismico import EventoSismico
+from Entidades.MuestraSismica import MuestraSismica
+from Entidades.OrigenGeneracion import OrigenDeGeneracion
+from Entidades.SerieTemporal import SerieTemporal
+from Entidades.Sismografo import Sismografo
 
 dt = lambda s: datetime.strptime(s, "%Y-%m-%d %H:%M")
 

@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from Usuario import Usuario
+from Entidades.Usuario import Usuario
 
 
 class Sesion:
