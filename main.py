@@ -1,5 +1,10 @@
+from datetime import datetime
+
 from PantallaRevision import PantallaRevision
-from repositorio_eventos import obtener_eventos_predeterminados
+from Sesion import Sesion
+from Usuario import Usuario
 
 if __name__ == "__main__":
-    PantallaRevision().opcionRegistrarResultado()
+    sesion = Sesion()
+    sesion.iniciarSesionDesdeTeclado()
+    PantallaRevision(sesion).opcionRegistrarResultado()

@@ -68,22 +68,22 @@ class EventoSismico:
             "longitudHipocentro": self.longitudHipocentro
         }
 
-    def bloquearEvento(self, estadoBloqueado: Estado, fechaHora):
+    def bloquearEvento(self, estadoBloqueado: Estado, fechaHora, responsable):
         for c in self.cambiosEstado:
             if CambioEstado.esActual(c):
                 c.setFechaHoraFin(fechaHora)
-                self.crearCambioEstado(estadoBloqueado, fechaHora)
+                self.crearCambioEstado(estadoBloqueado, fechaHora, responsable)
                 break
 
-    def crearCambioEstado(self, estadoBloqueado, fechaHora) -> CambioEstado:
-        bloqueado = CambioEstado(estado=estadoBloqueado, fechaHoraInicio=fechaHora, responsable="Usuario")
-        self.cambiosEstado.append(bloqueado)
-        self.cambioEstadoActual = bloqueado
+    def crearCambioEstado(self, estado, fechaHora, nombreUsuario: Optional[str]) -> CambioEstado:
+        cambio = CambioEstado(estado=estado, fechaHoraInicio=fechaHora, responsable=nombreUsuario)
+        self.cambiosEstado.append(cambio)
+        self.cambioEstadoActual = cambio
         print("Cambio de estado actualizado!")
         print("Evento:", self.id_evento)
         print("Estado Actual del Evento:", self.cambioEstadoActual.estado.nombre)
         print("Fecha Hora Inicio del Cambio de estado:", self.cambioEstadoActual.fechaHoraInicio)
-        return bloqueado
+        return cambio
 
     def getDatosEvento(self) -> dict:
         def _d(obj, base): return obj.getDatos() if obj else base
@@ -112,3 +112,9 @@ class EventoSismico:
     def setNuevaMagnitud(self, nuevoMagnitud):
         self.valorMagnitud = nuevoMagnitud
 
+    def rechazarEvento(self, estadoRechazado: Estado, fechaHora, nombreUsuario):
+        for c in self.cambiosEstado:
+            if CambioEstado.esActual(c):
+                c.setFechaHoraFin(fechaHora)
+                self.crearCambioEstado(estadoRechazado, fechaHora, nombreUsuario)
+                break

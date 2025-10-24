@@ -6,8 +6,8 @@ from GestorRevisionResultados import GestorRevisionResultados
 
 
 class PantallaRevision:
-    def __init__(self) -> None:
-        self.gestor: GestorRevisionResultados = GestorRevisionResultados()
+    def __init__(self, sesion) -> None:
+        self.gestor = GestorRevisionResultados(sesion)
 
     def opcionRegistrarResultado(self) -> None:
         """Método principal invocado por el actor AS"""
@@ -62,7 +62,7 @@ class PantallaRevision:
 
     def solicitarOpcionMapa(self):
         OpMapa = input("Desea Visualizar el mapa?")  # Agregar botones de si o no en el front
-        return GestorRevisionResultados.tomarSeleccionMapa(GestorRevisionResultados(), OpMapa)
+        return GestorRevisionResultados.tomarSeleccionMapa(GestorRevisionResultados(self.gestor.sesion), OpMapa)
 
     def solicitarModificaciones(self, evento: EventoSismico):
         opcion = input("Desea Modificar los datos del Evento? (S-N)")
@@ -76,4 +76,12 @@ class PantallaRevision:
         else:
             return print("Sin Modificaciones")
 
+    def presentarAcciones(self):
+        print("ACCIONES"
+              "1)Confirmar Evento"
+              "2)Rechazar Evento"
+              "3)Solicitar Revision a Experto")
 
+    def tomarSeleccionAccion(self) -> int:
+        Accion = int(input("Seleccione una accion:"))
+        return Accion

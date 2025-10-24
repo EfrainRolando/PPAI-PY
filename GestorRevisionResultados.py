@@ -4,32 +4,43 @@ from datetime import datetime
 
 from Estado import Estado
 from EventoSismico import EventoSismico
+from Sesion import Sesion
 from repositorio_eventos import obtener_eventos_predeterminados
 
 
 class GestorRevisionResultados:
-    def __init__(self):
+    def __init__(self, sesion):
         self.eventos: List[EventoSismico] = obtener_eventos_predeterminados()
+        self.sesion = sesion
 
     def registrarResultado(self) -> None:
         print("Gestor creado → registrando resultado...")
         datos = self.buscarSismosARevisar()
         datos_ordenados = self.ordenarEventosPorFechaOcurrencia(datos)
         from PantallaRevision import PantallaRevision
-        PantallaRevision().mostrarDatosEventosSismicos(datos_ordenados)
-        EventoSeleccionado = PantallaRevision().solicitarSeleccionEventoSismico()
+        PantallaRevision(self.sesion).mostrarDatosEventosSismicos(datos_ordenados)
+        EventoSeleccionado = PantallaRevision(self.sesion).solicitarSeleccionEventoSismico()
         EstadoBloqueado = self.buscarEstadoBloqueadoEnRevision()
         fechaHoraActual = self.getFechaYHoraActual()
         self.cambiarEstadoABloqueadoEnRevision(EventoSeleccionado, EstadoBloqueado, fechaHoraActual)
         datos = self.buscarDatosEventoSismico(EventoSeleccionado)
-        PantallaRevision().mostrarDatosEventoSismico(datos)
+        PantallaRevision(self.sesion).mostrarDatosEventoSismico(datos)
         self.imprimir_series_evento(
             EventoSeleccionado)  # Metodo que no pertenece al diagrama, pero sirve para mostrar las series temporales en consola o en el front
         # self.llamarCUGenerarSismograma
         self.habilitarOpcionMapa()
         self.habilitarModificaciones(EventoSeleccionado)
         datos = self.buscarDatosEventoSismico(EventoSeleccionado)
-        PantallaRevision().mostrarDatosEventoSismico(datos)
+        PantallaRevision(self.sesion).mostrarDatosEventoSismico(datos)
+        PantallaRevision(self.sesion).presentarAcciones()
+        Accion = PantallaRevision(self.sesion).tomarSeleccionAccion()
+        self.validarSeleccionAccion(Accion)
+        nombreUsuario = self.buscarUsuario()
+        if Accion == 2 and EventoSeleccionado.valorMagnitud is not None and EventoSeleccionado.valorMagnitud is not None and EventoSeleccionado.origenGeneracion is not None:
+            EstadoRechazado = self.buscarEstadoRechazado()
+            fechaHoraActual = self.getFechaYHoraActual()
+            self.cambiarEstadoARechazado(EventoSeleccionado, EstadoRechazado, fechaHoraActual, nombreUsuario)
+        self.finCU()
 
     def buscarSismosARevisar(self) -> List[dict]:
         """Filtra los eventos que deben ser revisados"""
@@ -61,8 +72,9 @@ class GestorRevisionResultados:
     def getFechaYHoraActual(self) -> datetime:
         return datetime.now()
 
-    def cambiarEstadoABloqueadoEnRevision(self, EventoSeleccionado, estadoBloqueado: Estado, fechaHoraInicio) -> None:
-        EventoSismico.bloquearEvento(EventoSeleccionado, estadoBloqueado, fechaHoraInicio)
+    def cambiarEstadoABloqueadoEnRevision(self, EventoSeleccionado, estadoBloqueado: Estado, fechaHoraInicio,
+                                          responsable="Usuario") -> None:
+        EventoSismico.bloquearEvento(EventoSeleccionado, estadoBloqueado, fechaHoraInicio, responsable)
 
     def buscarDatosEventoSismico(self, evento: EventoSismico) -> Dict[str, Any]:
         EventoSismico.eventoSeleccionado = evento
@@ -133,14 +145,14 @@ class GestorRevisionResultados:
 
     def habilitarOpcionMapa(self) -> bool:
         from PantallaRevision import PantallaRevision
-        PantallaRevision().solicitarOpcionMapa()
+        PantallaRevision(self.sesion).solicitarOpcionMapa()
 
     def tomarSeleccionMapa(self, Opcion):
         return print("Opcion Elegida:", Opcion)
 
     def habilitarModificaciones(self, evento: EventoSismico):
         from PantallaRevision import PantallaRevision
-        PantallaRevision().solicitarModificaciones(evento)
+        PantallaRevision(self.sesion).solicitarModificaciones(evento)
 
     def tomarModificaciones(self, nuevoOrigenNombre, nuevoOrigenDescripcion, nuevoAlcanceNombre,
                             nuevoAlcanceDescripcion, nuevoMagnitud, evento: EventoSismico):
@@ -151,3 +163,25 @@ class GestorRevisionResultados:
         return {
             "evento": evento.getDatosEvento()
         }
+
+    def buscarEstadoRechazado(self) -> Estado:
+        for a in Estado.AMBITOS_POSIBLES:
+            if a == "EventoSismico":
+                for n in Estado.NOMBRES_POSIBLES:
+                    if n == "Rechazado":
+                        return Estado(n, a)
+
+    def cambiarEstadoARechazado(self, EventoSeleccionado, EstadoRechazado, fechaHoraActual, nombreUsuario) -> None:
+        EventoSismico.rechazarEvento(EventoSeleccionado, EstadoRechazado, fechaHoraActual, nombreUsuario)
+
+    def validarSeleccionAccion(self, Accion):
+        if Accion >= 0 or Accion <= 4:
+            if Accion != 2:
+                print("Accion No valida!")
+
+    def buscarUsuario(self) -> str:
+        # Usa la misma instancia; si no hay login, Sesion lo pedirá
+        return self.sesion.getUsuario()
+
+    def finCU(self):
+        print("Llegaste hasta el final, crack")
