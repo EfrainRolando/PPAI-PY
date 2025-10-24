@@ -25,6 +25,7 @@ class PantallaRevision:
                 f"- #{d['id_evento']} | {d['fechaHoraOcurrencia']} | M{d['magnitud']} | "
                 f"Epi(lat:{d['latitudEpicentro']}, lon:{d['longitudEpicentro']}) | "
                 f"Hipo(lat:{d['latitudHipocentro']}, lon:{d['longitudHipocentro']})"
+                
             )
 
     def solicitarSeleccionEventoSismico(self) -> EventoSismico:
@@ -54,6 +55,9 @@ class PantallaRevision:
 
         lineas.append("\n-- Origen de Generación --")
         lineas.append(f"Nombre: {org.get('nombre', '(sin datos)')} | Detalle: {org.get('descripcion', '')}")
+
+        lineas.append("\n-- Estado Actual --")
+        lineas.append(f"Estado: {evento.get('estadoActual', '(sin datos)')}")
 
         texto = "\n".join(lineas)
         if devolver_str:

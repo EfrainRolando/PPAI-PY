@@ -1,6 +1,9 @@
 from typing import List
 
-from typing_extensions import ClassVar
+try:
+    from typing_extensions import ClassVar
+except ImportError:
+    from typing import ClassVar
 
 
 class Estado:

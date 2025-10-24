@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4">Detalle del evento #{{ evento.id_evento }}</h1>
+    <div>Hola, {{ user }}</div>
+  </div>
+
+  {% if mensaje %}
+    <div class="alert alert-success">{{ mensaje }}</div>
+  {% endif %}
+
+  <div class="card mb-3">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <div><strong>Fecha:</strong> {{ evento.fechaOcurrencia }}</div>
+          <div><strong>Magnitud:</strong> {{ evento.magnitud }}</div>
+          <div><strong>Estado actual:</strong> {{ evento.estadoActual }}</div>
+        </div>
+        <div class="col-md-4">
+          <div><strong>Epicentro:</strong> lat {{ evento.epicentro.lat }}, lon {{ evento.epicentro.lon }}</div>
+          <div><strong>Hipocentro:</strong> lat {{ evento.hipocentro.lat }}, lon {{ evento.hipocentro.lon }}</div>
+        </div>
+        <div class="col-md-4 text-end">
+          <a class="btn btn-primary" href="{% url 'revisar_evento' evento.id_evento %}">Revisar</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="h5 mb-2">Series temporales</h2>
+  {% if series %}
+    <div class="table-responsive">
+      <table class="table table-sm table-bordered">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Condición marea</th>
+            <th>Desde</th>
+            <th>Hasta</th>
+            <th>Frecuencia (Hz)</th>
+            <th>Código Estación</th>
+            <th>Muestras</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in series %}
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ s.condicionMarea }}</td>
+            <td>{{ s.desde }}</td>
+            <td>{{ s.hasta }}</td>
+            <td>{{ s.frecuencia }}</td>
+            <td>{{s.CodigoEstacion }}</td>
+            <td>
+              {% if s.muestras %}{{ s.muestras|length }}{% else %}-{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="alert alert-secondary">Este evento no tiene series temporales asociadas.</div>
+  {% endif %}
+{% endblock %}

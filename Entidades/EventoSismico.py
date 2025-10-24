@@ -25,7 +25,7 @@ class EventoSismico:
             clasificacion: Optional[ClasificacionSismo] = None,
             origenGeneracion: Optional[OrigenDeGeneracion] = None,
             seriesTemporales: Optional[List[SerieTemporal]] = None,
-            cambioEstadoActual: Optional[CambioEstado] = None
+            cambioEstadoActual: Optional[CambioEstado] = None,
     ) -> None:
         self.id_evento = id_evento
         self.cambiosEstado: List[CambioEstado] = list(cambiosEstado or [])
@@ -43,6 +43,11 @@ class EventoSismico:
         self.cambioEstadoActual = cambioEstadoActual
 
     # ---------- reglas locales ----------
+    def getEstadoActual(self) -> str:
+        for c in self.cambiosEstado:
+            if c.esActual():
+                return c.estado.nombre
+        return None
     def buscarSismosARevisar(self) -> bool:
         AD = 0
         for c in self.cambiosEstado:
@@ -65,7 +70,8 @@ class EventoSismico:
             "latitudEpicentro": self.latitudEpicentro,
             "longitudEpicentro": self.longitudEpicentro,
             "latitudHipocentro": self.latitudHipocentro,
-            "longitudHipocentro": self.longitudHipocentro
+            "longitudHipocentro": self.longitudHipocentro,
+            "estadoActual": self.getEstadoActual()
         }
 
     def bloquearEvento(self, estadoBloqueado: Estado, fechaHora, responsable):
@@ -96,6 +102,7 @@ class EventoSismico:
             "alcance": _d(self.alcance, {"nombre": "(sin datos)", "descripcion": ""}),
             "clasificacion": _d(self.clasificacion, {"nombre": "(sin datos)", "escala": ""}),
             "origen": _d(self.origenGeneracion, {"nombre": "(sin datos)", "detalle": ""}),
+            "estadoActual": self.getEstadoActual() or "(sin datos)",
         }
 
     def getDatosSeriesTemporales(self) -> list[dict]:
