@@ -26,6 +26,7 @@ class EventoSismico:
             origenGeneracion: Optional[OrigenDeGeneracion] = None,
             seriesTemporales: Optional[List[SerieTemporal]] = None,
             cambioEstadoActual: Optional[CambioEstado] = None,
+            estadoActual: Optional[Estado] = None,
     ) -> None:
         self.id_evento = id_evento
         self.cambiosEstado: List[CambioEstado] = list(cambiosEstado or [])
@@ -41,21 +42,33 @@ class EventoSismico:
         self.origenGeneracion = origenGeneracion
         self.seriesTemporales: List[SerieTemporal] = list(seriesTemporales or [])
         self.cambioEstadoActual = cambioEstadoActual
+        self.estadoActual = self.getEstadoActual()
 
     # ---------- reglas locales ----------
-    def getEstadoActual(self) -> str:
-        for c in self.cambiosEstado:
+    def getEstadoActual(self) -> str | None:
+        """
+        Devuelve el nombre del estado del ÚLTIMO CambioEstado 'vigente' (sin fechaHoraFin).
+        Si por alguna razón no hay ninguno vigente (no debería pasar con el fix),
+        como fallback devuelve el nombre del último cambio de la lista.
+        """
+        # Buscar el más reciente vigente
+        for c in reversed(self.cambiosEstado):
             if c.esActual():
                 return c.estado.nombre
+        # Fallback: último estado registrado
+        if self.cambiosEstado:
+            return self.cambiosEstado[-1].estado.nombre
         return None
+        
     def buscarSismosARevisar(self) -> bool:
-        AD = 0
+        vio_AD = False
         for c in self.cambiosEstado:
-            if CambioEstado.sosAutoDetectado(c):
-                AD = 1
-            if CambioEstado.sosPteRevision(c) and CambioEstado.esActual(c) and AD == 1:
+            if c.sosAutoDetectado():
+                vio_AD = True
+            elif vio_AD and c.sosPteRevision():
                 return True
-
+        return False
+    
     def getFechaHoraOcurrencia(self):
         return self.fechaHoraOcurrencia
 
@@ -71,15 +84,23 @@ class EventoSismico:
             "longitudEpicentro": self.longitudEpicentro,
             "latitudHipocentro": self.latitudHipocentro,
             "longitudHipocentro": self.longitudHipocentro,
-            "estadoActual": self.getEstadoActual()
+    # ANTES: "EstadoActual": self.getEstadoActual()
+            "estadoActual": self.getEstadoActual(),
         }
 
     def bloquearEvento(self, estadoBloqueado: Estado, fechaHora, responsable):
+        """
+        Cierra TODOS los cambios vigentes (si hay) y SIEMPRE crea uno nuevo BloqueadoEnRevision.
+        Esto evita quedar sin 'actual' y corrige casos con múltiples 'actuales'.
+        """
+        hubo_vigentes = False
         for c in self.cambiosEstado:
             if CambioEstado.esActual(c):
                 c.setFechaHoraFin(fechaHora)
-                self.crearCambioEstado(estadoBloqueado, fechaHora, responsable)
-                break
+                hubo_vigentes = True
+        # crear SIEMPRE el nuevo cambio (aunque no hubiera vigente previo)
+        self.crearCambioEstado(estadoBloqueado, fechaHora, responsable)
+
 
     def crearCambioEstado(self, estado, fechaHora, nombreUsuario: Optional[str]) -> CambioEstado:
         cambio = CambioEstado(estado=estado, fechaHoraInicio=fechaHora, responsable=nombreUsuario)
@@ -120,8 +141,10 @@ class EventoSismico:
         self.valorMagnitud = nuevoMagnitud
 
     def rechazarEvento(self, estadoRechazado: Estado, fechaHora, nombreUsuario):
+        """
+        Igual criterio que bloquearEvento: cerrar TODOS los vigentes y crear SIEMPRE el nuevo.
+        """
         for c in self.cambiosEstado:
             if CambioEstado.esActual(c):
                 c.setFechaHoraFin(fechaHora)
-                self.crearCambioEstado(estadoRechazado, fechaHora, nombreUsuario)
-                break
+        self.crearCambioEstado(estadoRechazado, fechaHora, nombreUsuario)

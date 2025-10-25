@@ -20,11 +20,19 @@
         <div class="col-md-4">
           <div><strong>Epicentro:</strong> lat {{ evento.epicentro.lat }}, lon {{ evento.epicentro.lon }}</div>
           <div><strong>Hipocentro:</strong> lat {{ evento.hipocentro.lat }}, lon {{ evento.hipocentro.lon }}</div>
-        </div>
-        <div class="col-md-4 text-end">
-          <a class="btn btn-primary" href="{% url 'revisar_evento' evento.id_evento %}">Revisar</a>
-        </div>
-      </div>
+            <div class="row mt-4">
+    <div class="col text-end">
+      <button type="submit" name="accion" value="guardar" class="btn btn-secondary me-2">
+        Guardar
+      </button>
+      <button type="submit" name="accion" value="aprobar" class="btn btn-success me-2">
+        Confirmar Evento
+      </button>
+      <button type="submit" name="accion" value="rechazar" class="btn btn-danger">
+        Rechazar Evento
+      </button>
+    </div>
+  </div>
     </div>
   </div>
 

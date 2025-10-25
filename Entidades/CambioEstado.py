@@ -18,11 +18,11 @@ class CambioEstado:
         return self.fechaHoraFin is None
 
     def sosAutoDetectado(self) -> bool:
-        # delega en Estado.sosAuto()
+    # ANTES: return self.estado.nombre.sosAutoDetectado()
         return self.estado.sosAutoDetectado()
 
     def sosPteRevision(self) -> bool:
-        # delega en Estado.sosPteRevision()
+    # ANTES: return self.estado.nombre.sosPteRevision()
         return self.estado.sosPteRevision()
 
     def setFechaHoraFin(self, fechaHoraFin):

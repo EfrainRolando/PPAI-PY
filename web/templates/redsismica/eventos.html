@@ -29,7 +29,7 @@
           <td>{{ e.hipocentro.lat }}, {{ e.hipocentro.lon }}</td>
           <td><span class="badge text-bg-secondary">{{ e.estado }}</span></td>
           <td class="text-end">
-            <a class="btn btn-sm btn-outline-primary" href="{% url 'evento_detalle' e.id %}">Revisar</a>
+            <a class="btn btn-sm btn-primary" href="{% url 'evento_detalle' e.id %}">Revisar</a>
           </td>
         </tr>
         {% endfor %}

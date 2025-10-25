@@ -42,9 +42,8 @@ class Estado:
         return cls.AMBITOS_POSIBLES
 
     # ---------- Métodos de clase que el Gestor va a llamar ----------
-    def sosBloqueadoEnRevision(self) -> str:
-        if self.nombre == "BloqueadoEnRevision":
-            return self.nombre
+    def sosBloqueadoEnRevision(self) -> bool:
+        return self.nombre == "BloqueadoEnRevision"
 
     def esAmbitoES(self) -> bool:
         return self.ambito == "EventoSismico"
