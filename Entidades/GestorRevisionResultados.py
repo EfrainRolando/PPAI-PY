@@ -6,12 +6,16 @@ from Entidades.Estado import Estado
 from Entidades.EventoSismico import EventoSismico
 from Entidades.Sesion import Sesion
 from Entidades.repositorio_eventos import obtener_eventos_predeterminados
+from apps.redsismica.repositorio import RepositorioEventosDjango
 
 
 class GestorRevisionResultados:
     def __init__(self, sesion):
-        self.eventos: List[EventoSismico] = obtener_eventos_predeterminados()
+        
         self.sesion = sesion
+        self.repo = RepositorioEventosDjango()
+        self.eventoSeleccionado = None
+        self.eventos: List[EventoSismico] = self.repo.obtener_eventos()
 
     def registrarResultado(self) -> None:
         print("Gestor creado → registrando resultado...")
