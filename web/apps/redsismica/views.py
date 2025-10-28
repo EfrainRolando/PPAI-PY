@@ -9,6 +9,7 @@ from django.shortcuts import redirect, get_object_or_404
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 
+
 from .forms import LoginForm
 
 # Importamos TU Gestor/Sesion/Entidades (gracias al sys.path agregado en manage.py)
@@ -107,64 +108,47 @@ def eventos_view(request: HttpRequest) -> HttpResponse:
 
 @requiere_login
 def evento_detalle_view(request: HttpRequest, evento_id: int) -> HttpResponse:
-    """Detalle: el front sólo invoca métodos del Gestor. Sin decisiones propias."""
     usuario = _get_user(request)
-
     sesion = Sesion()
     gestor = GestorRevisionResultados(sesion)
 
-    # Objeto de dominio seleccionado
+    # Carga de evento según tu Gestor
     evento = gestor.tomarSeleccionEventoSismico(evento_id)
 
-    if request.method == "GET":
-        # ——— SIN lógica: SIEMPRE pedimos bloquear al Gestor y luego pedimos los datos ———
-        estado_bloqueado = gestor.buscarEstadoBloqueadoEnRevision()
-        fecha_hora = gestor.getFechaYHoraActual()
-        gestor.cambiarEstadoABloqueadoEnRevision(evento, estado_bloqueado, fecha_hora, usuario)
+    if request.method == "POST":
+        accion = request.POST.get("accion", "").strip().lower()
 
-        # Volvemos a pedir datos YA actualizados para el template
-        datos = gestor.buscarDatosEventoSismico(evento)
-        series = gestor.obtenerDatosSeriesTemporales(evento)
+        # Map clásico que ya usabas:
+        # aprobar -> 1, rechazar -> 2, guardar -> 3
+        # añadí "solicitar" como 3 (no destructivo)
+        ACCION_MAP = {"aprobar": 1, "rechazar": 2, "guardar": 3, "solicitar": 3}
+        Accion = ACCION_MAP.get(accion)
 
-        return render(request, "redsismica/evento_detalle.html", {
-            "evento": datos["evento"],
-            "series": series,
-            "user": usuario,
-        })
+        nombreUsuario = usuario
 
-    # =========================
-    # POST (sin inventar reglas nuevas)
-    # =========================
-    nueva_magnitud = request.POST.get("magnitud")
-    nuevo_alcance_nombre = request.POST.get("alcance_nombre")
-    nuevo_alcance_desc = request.POST.get("alcance_desc")
+        # Aprobación (confirmar) -> no hace cambios y vuelve a eventos
+        if Accion == 1:
+            messages.info(request, "Confirmado: sin cambios aplicados")
+            return redirect("eventos")
 
-    if nueva_magnitud not in (None, ""):
-        try:
-            evento.setNuevaMagnitud(float(nueva_magnitud))
-        except ValueError:
-            pass
+        # Rechazar -> cambia estado y vuelve a eventos
+        if (Accion == 2):
+            EstadoRechazado = gestor.buscarEstadoRechazado()
+            fechaHoraActual = gestor.getFechaYHoraActual()
+            gestor.cambiarEstadoARechazado(evento, EstadoRechazado, fechaHoraActual, nombreUsuario)
+            messages.success(request, "Evento rechazado exitosamente")
+            return redirect("eventos")
 
-    if (nuevo_alcance_nombre or nuevo_alcance_desc):
-        evento.setNuevoAlcance(nuevo_alcance_nombre or "", nuevo_alcance_desc or "")
+        # Guardar / Solicitar revisión a experto -> lógica no destructiva que ya tenías
+        if Accion == 3:
+            # acá podés disparar derivación si lo querés en el futuro
+            messages.success(request, "Solicitado: revisión a experto")
+            return redirect("eventos")
 
-    accion_txt = request.POST.get("accion", "guardar")
-    ACCION_MAP = {"aprobar": 1, "rechazar": 2, "guardar": 3}
-    Accion = ACCION_MAP.get(accion_txt, 3)
+        # si llega algo raro, cerramos CU y seguimos
+        gestor.finCU()
 
-    gestor.validarSeleccionAccion(Accion)
-    nombreUsuario = gestor.buscarUsuario()
-
-    magnitud_val = getattr(evento, "valorMagnitud", getattr(evento, "magnitud", None))
-    origen = getattr(evento, "origenGeneracion", None)
-
-    if (Accion == 2 and magnitud_val is not None and origen is not None):
-        EstadoRechazado = gestor.buscarEstadoRechazado()
-        fechaHoraActual = gestor.getFechaYHoraActual()
-        gestor.cambiarEstadoARechazado(evento, EstadoRechazado, fechaHoraActual, nombreUsuario)
-
-    gestor.finCU()
-
+    # GET normal: traer datos
     datos = gestor.buscarDatosEventoSismico(evento)
     series = gestor.obtenerDatosSeriesTemporales(evento)
 
@@ -172,9 +156,5 @@ def evento_detalle_view(request: HttpRequest, evento_id: int) -> HttpResponse:
         "evento": datos["evento"],
         "series": series,
         "user": usuario,
-        "mensaje": (
-            "Evento rechazado exitosamente" if Accion == 2 else
-            "Evento aprobado" if Accion == 1 else
-            "Cambios guardados"
-        ),
+        "mensaje": None,
     })

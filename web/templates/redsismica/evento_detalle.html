@@ -9,7 +9,7 @@
     <div class="alert alert-success">{{ mensaje }}</div>
   {% endif %}
 
-  <div class="card mb-3">
+<div class="card mb-3">
     <div class="card-body">
       <div class="row g-3">
         <div class="col-md-4">
@@ -20,19 +20,23 @@
         <div class="col-md-4">
           <div><strong>Epicentro:</strong> lat {{ evento.epicentro.lat }}, lon {{ evento.epicentro.lon }}</div>
           <div><strong>Hipocentro:</strong> lat {{ evento.hipocentro.lat }}, lon {{ evento.hipocentro.lon }}</div>
-            <div class="row mt-4">
-    <div class="col text-end">
-      <button type="submit" name="accion" value="guardar" class="btn btn-secondary me-2">
-        Guardar
-      </button>
-      <button type="submit" name="accion" value="aprobar" class="btn btn-success me-2">
-        Confirmar Evento
-      </button>
-      <button type="submit" name="accion" value="rechazar" class="btn btn-danger">
-        Rechazar Evento
-      </button>
-    </div>
-  </div>
+        </div>
+      </div>
+
+      <form method="post" class="mt-4">
+        {% csrf_token %}
+        <div class="row mt-4">
+          <div class="col text-end">
+            <button type="submit" name="accion" value="solicitar" class="btn btn-secondary me-2"> Solicitar Revisión a experto </button>
+            <button type="submit" name="accion" value="aprobar" class="btn btn-success me-2">
+              Confirmar Evento
+            </button>
+            <button type="submit" name="accion" value="rechazar" class="btn btn-danger">
+              Rechazar Evento
+            </button>
+          </div>
+        </div>
+      </form>
     </div>
   </div>
 

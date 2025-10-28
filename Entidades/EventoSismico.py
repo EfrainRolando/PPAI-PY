@@ -61,6 +61,10 @@ class EventoSismico:
         return None
         
     def buscarSismosARevisar(self) -> bool:
+        # ⬇️ si el estado vigente es Rechazado, NO va a la lista
+        if self.getEstadoActual() == "Rechazado":
+            return False
+
         vio_AD = False
         for c in self.cambiosEstado:
             if c.sosAutoDetectado():

@@ -7,5 +7,4 @@ urlpatterns = [
     path("logout/", views.logout_view, name="logout"),
     path("eventos/", views.eventos_view, name="eventos"),
     path("eventos/<int:evento_id>/", views.evento_detalle_view, name="evento_detalle"),
-    # ❌ fuera: path("eventos/<int:evento_id>/revisar/", views.revisar_evento_view, name="revisar_evento"),
 ]

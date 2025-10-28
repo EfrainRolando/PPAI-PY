@@ -15,8 +15,10 @@ from Entidades.Sismografo import Sismografo
 
 dt = lambda s: datetime.strptime(s, "%Y-%m-%d %H:%M")
 
+_EVENTOS_CACHE: List[EventoSismico] | None = None
 
-def obtener_eventos_predeterminados() -> List[EventoSismico]:
+
+def  _crear_eventos_iniciales() -> List[EventoSismico]:
     # Cambios “ya hechos”
     c1 = CambioEstado(Estado("AutoDetectado", "EventoSismico"), dt("2025-10-06 09:14"), "sensor",
                       fechaHoraFin=dt("2025-10-06 09:20"))
@@ -170,3 +172,10 @@ def obtenerSismografos() -> list[Sismografo]:
     s2 = Sismografo("SG-002", estaciones[0], seriesTemporales=[st4])
     s3 = Sismografo("SG-003", estaciones[2], seriesTemporales=[st2])
     return [s1, s2, s3]
+
+def obtener_eventos_predeterminados() -> List[EventoSismico]:
+    global _EVENTOS_CACHE
+    if _EVENTOS_CACHE is None:
+        _EVENTOS_CACHE = _crear_eventos_iniciales()
+    # ¡No devuelvas copias! (nada de list(_EVENTOS_CACHE))
+    return _EVENTOS_CACHE
