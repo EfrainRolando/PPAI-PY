@@ -142,3 +142,8 @@ class EventoSismico:
             if CambioEstado.esActual(c):
                 c.setFechaHoraFin(fechaHora)
         self.crearCambioEstado(estadoRechazado, fechaHora, responsable)
+    def volverAtras(self, estadoPteRevision: Estado, fechaHora, responsable):
+        for c in self.cambiosEstado:
+            if CambioEstado.esActual(c):
+                c.setFechaHoraFin(fechaHora)
+        self.crearCambioEstado(estadoPteRevision, fechaHora, responsable)

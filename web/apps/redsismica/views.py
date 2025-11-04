@@ -126,6 +126,7 @@ def evento_detalle_view(request: HttpRequest, evento_id: int) -> HttpResponse:
         Accion = ACCION_MAP.get(accion)
         # Aprobación (confirmar) -> no hace cambios y vuelve a eventos
         if Accion == 1:
+            gestor.cambiarEstadoAPteRevision(evento, usuario)
             messages.info(request, "Confirmado: sin cambios aplicados")
             return redirect("eventos")
 
@@ -137,6 +138,7 @@ def evento_detalle_view(request: HttpRequest, evento_id: int) -> HttpResponse:
 
         # Guardar / Solicitar revisión a experto -> lógica no destructiva que ya tenías
         if Accion == 3:
+            gestor.cambiarEstadoAPteRevision(evento, usuario)
             # acá podés disparar derivación si lo querés en el futuro
             messages.success(request, "Solicitado: revisión a experto")
             return redirect("eventos")

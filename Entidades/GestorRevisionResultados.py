@@ -121,3 +121,12 @@ class GestorRevisionResultados:
 
     def finCU(self):
         print("Llegaste hasta el final, crack")
+    
+    def buscarPteRevision(self) -> None:
+        for n in Estado.NOMBRES_POSIBLES:
+            if n == "PteRevision":
+                return Estado(n)
+    def cambiarEstadoAPteRevision(self, EventoSeleccionado, responsable) -> None:
+            EstadoRechazado = self.buscarPteRevision()
+            fechaHoraActual = self.getFechaYHoraActual()
+            EventoSismico.volverAtras(EventoSeleccionado, EstadoRechazado, fechaHoraActual, responsable)
