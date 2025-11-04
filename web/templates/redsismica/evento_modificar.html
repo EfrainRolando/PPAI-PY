@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4">Modificar Evento #{{ evento.id_evento }}</h1>
+    <div>Hola, {{ user }}</div>
+  </div>
+
+<div class="card mb-3">
+  <div class="card-body">
+    <form method="post">
+      {% csrf_token %}
+
+      <h2 class="h5 mb-3">Datos Sísmicos (Editables)</h2>
+      
+      {% if form_error %}
+        <div class="alert alert-danger">{{ form_error }}</div>
+      {% endif %}
+
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label for="magnitud" class="form-label"><strong>Magnitud</strong></label>
+          <input type="number" step="0.1" class="form-control" id="magnitud" name="magnitud" value="{{ evento.magnitud }}">
+        </div>
+        
+        <div class="col-md-4">
+          <label for="alcance_nombre" class="form-label"><strong>Alcance (Nombre)</strong></label>
+          <input type="text" class="form-control" id="alcance_nombre" name="alcance_nombre" value="{{ evento.alcance.nombre }}">
+          <label for="alcance_desc" class="form-label mt-2"><strong>Alcance (Descripción)</strong></label>
+          <textarea class="form-control" id="alcance_desc" name="alcance_desc" rows="2">{{ evento.alcance.descripcion }}</textarea>
+        </div>
+        
+        <div class="col-md-4">
+          <label for="origen_nombre" class="form-label"><strong>Origen (Nombre)</strong></label>
+          <input type="text" class="form-control" id="origen_nombre" name="origen_nombre" value="{{ evento.origen.nombre }}">
+          <label for="origen_detalle" class="form-label mt-2"><strong>Origen (Detalle)</strong></label>
+          <textarea class="form-control" id="origen_detalle" name="origen_detalle" rows="2">{{ evento.origen.detalle }}</textarea>
+        </div>
+      </div>
+
+      <div class="text-end mt-4">
+        <a href="{% url 'evento_detalle' evento.id_evento %}" class="btn btn-secondary me-2">Cancelar</a>
+        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -34,6 +34,7 @@ class GestorRevisionResultados:
         PantallaRevision(self.sesion).presentarAcciones()
         Accion = PantallaRevision(self.sesion).tomarSeleccionAccion()
         self.validarSeleccionAccion(Accion)
+        self.validarDatosEventoSismico(EventoSeleccionado)
         self.cambiarEstadoARechazado(EventoSeleccionado)
         self.finCU()
 
@@ -115,6 +116,10 @@ class GestorRevisionResultados:
             if Accion != 2:
                 print("Accion No valida!")
 
+    def validarDatosEventoSismico(self, EventoSeleccionado):
+        if EventoSeleccionado.getDatosEvento() is None:
+            print("Error: Los datos del evento sismico no son validos.")
+
     def buscarUsuario(self) -> str:
         # Usa la misma instancia; si no hay login, Sesion lo pedirá
         return self.sesion.getUsuario()
@@ -122,11 +127,22 @@ class GestorRevisionResultados:
     def finCU(self):
         print("Llegaste hasta el final, crack")
     
-    def buscarPteRevision(self) -> None:
+    def buscarConfirmado(self) -> None:
         for n in Estado.NOMBRES_POSIBLES:
-            if n == "PteRevision":
+            if n == "Confirmado":
                 return Estado(n)
-    def cambiarEstadoAPteRevision(self, EventoSeleccionado, responsable) -> None:
-            EstadoRechazado = self.buscarPteRevision()
+            
+    def cambiarEstadoAConfirmado(self, EventoSeleccionado, responsable) -> None:
+            Estado= self.buscarConfirmado()
             fechaHoraActual = self.getFechaYHoraActual()
-            EventoSismico.volverAtras(EventoSeleccionado, EstadoRechazado, fechaHoraActual, responsable)
+            EventoSismico.confirmar(EventoSeleccionado, Estado, fechaHoraActual, responsable)
+            
+    def buscarDerivado(self) -> None:
+        for n in Estado.NOMBRES_POSIBLES:
+            if n == "Derivado":
+                return Estado(n)
+            
+    def cambiarEstadoADerivado(self, EventoSeleccionado, responsable) -> None:
+            Estado= self.buscarDerivado()
+            fechaHoraActual = self.getFechaYHoraActual()
+            EventoSismico.derivar(EventoSeleccionado, Estado, fechaHoraActual, responsable)

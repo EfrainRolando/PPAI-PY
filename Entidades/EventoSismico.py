@@ -111,11 +111,21 @@ class EventoSismico:
 
     def getDatosEvento(self) -> dict:
         def _d(obj, base): return obj.getDatos() if obj else base
+        def _round_coord(coord):
+            return round(coord, 4) if coord is not None else None
+        # --- FIN NUEVA LÍNEA ---
 
         return {
             "id_evento": self.id_evento,
             "fechaHoraOcurrencia": self.fechaHoraOcurrencia,
-            "coordenadas": {"lat": self.latitudEpicentro, "lon": self.longitudEpicentro},
+            "epicentro": {
+                "lat": _round_coord(self.latitudEpicentro), 
+                "lon": _round_coord(self.longitudEpicentro)
+            },
+            "hipocentro": {
+                "lat": _round_coord(self.latitudHipocentro), 
+                "lon": _round_coord(self.longitudHipocentro)
+            },
             "magnitud": self.valorMagnitud,
             "alcance": _d(self.alcance, {"nombre": "(sin datos)", "descripcion": ""}),
             "clasificacion": _d(self.clasificacion, {"nombre": "(sin datos)", "escala": ""}),
@@ -142,8 +152,15 @@ class EventoSismico:
             if CambioEstado.esActual(c):
                 c.setFechaHoraFin(fechaHora)
         self.crearCambioEstado(estadoRechazado, fechaHora, responsable)
-    def volverAtras(self, estadoPteRevision: Estado, fechaHora, responsable):
+        
+    def confirmar(self, estado, fechaHora, responsable):
         for c in self.cambiosEstado:
             if CambioEstado.esActual(c):
                 c.setFechaHoraFin(fechaHora)
-        self.crearCambioEstado(estadoPteRevision, fechaHora, responsable)
+        self.crearCambioEstado(estado, fechaHora, responsable)
+
+    def derivar(self, estado, fechaHora, responsable):
+        for c in self.cambiosEstado:
+            if CambioEstado.esActual(c):
+                c.setFechaHoraFin(fechaHora)
+        self.crearCambioEstado(estado, fechaHora, responsable)

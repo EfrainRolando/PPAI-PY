@@ -5,15 +5,15 @@
     <div>Hola, {{ user }}</div>
   </div>
 
-  {% if mensaje %}
-    <div class="alert alert-success">{{ mensaje }}</div>
-  {% endif %}
+  {% for message in messages %}
+    <div class="alert alert-{{ message.tags|default:'info' }}">{{ message }}</div>
+  {% endfor %}
 
 <div class="card mb-3">
     <div class="card-body">
       <div class="row g-3">
         <div class="col-md-4">
-          <div><strong>Fecha:</strong> {{ evento.fechaOcurrencia }}</div>
+          <div><strong>Fecha:</strong> {{ evento.fechaHoraOcurrencia }}</div>
           <div><strong>Magnitud:</strong> {{ evento.magnitud }}</div>
           <div><strong>Estado actual:</strong> {{ evento.estadoActual }}</div>
         </div>
@@ -23,56 +23,44 @@
         </div>
       </div>
 
+      <hr class="my-4">
+      <h2 class="h5 mb-3">Datos Sísmicos Registrados</h2>
+      <div class="row g-3">
+        <div class="col-md-4">
+          <h5>Alcance</h5>
+          <div><strong>Nombre:</strong> {{ evento.alcance.nombre }}</div>
+          <div class="text-muted"><small>{{ evento.alcance.descripcion }}</small></div>
+        </div>
+        <div class="col-md-4">
+          <h5>Clasificación</h5>
+          <div><strong>Nombre:</strong> {{ evento.clasificacion.nombre }}</div>
+        </div>
+        <div class="col-md-4">
+          <h5>Origen de Generación</h5>
+          <div><strong>Nombre:</strong> {{ evento.origen.nombre }}</div>
+          <div class="text-muted"><small>{{ evento.origen.detalle }}</small></div>
+        </div>
+      </div>
+
       <form method="post" class="mt-4">
         {% csrf_token %}
-        <div class="row mt-4">
-          <div class="col text-end">
-            <button type="submit" name="accion" value="solicitar" class="btn btn-secondary me-2"> Solicitar Revisión a experto </button>
-            <button type="submit" name="accion" value="aprobar" class="btn btn-success me-2">
-              Confirmar Evento
-            </button>
-            <button type="submit" name="accion" value="rechazar" class="btn btn-danger">
-              Rechazar Evento
-            </button>
+        <div class="d-flex justify-content-between mt-4 align-items-center">
+          
+          <div>
+            <button type="button" class="btn btn-info me-2" disabled>Generar Sismograma</button>
+            <a href="{% url 'evento_modificar' evento.id_evento %}" class="btn btn-warning">
+              Modificar Datos
+            </a>
           </div>
+          
+          <div class="text-end">
+            <button type="submit" name="accion" value="solicitar" class="btn btn-secondary me-2"> Solicitar Revisión a experto </button>
+            <button type="submit" name="accion" value="aprobar" class="btn btn-success me-2"> Confirmar </button>
+            <button type="submit" name="accion" value="rechazar" class="btn btn-danger"> Rechazar </button>
+          </div>
+
         </div>
       </form>
     </div>
   </div>
-
-  <h2 class="h5 mb-2">Series temporales</h2>
-  {% if series %}
-    <div class="table-responsive">
-      <table class="table table-sm table-bordered">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Condición marea</th>
-            <th>Desde</th>
-            <th>Hasta</th>
-            <th>Frecuencia (Hz)</th>
-            <th>Código Estación</th>
-            <th>Muestras</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for s in series %}
-          <tr>
-            <td>{{ forloop.counter }}</td>
-            <td>{{ s.condicionMarea }}</td>
-            <td>{{ s.desde }}</td>
-            <td>{{ s.hasta }}</td>
-            <td>{{ s.frecuencia }}</td>
-            <td>{{s.CodigoEstacion }}</td>
-            <td>
-              {% if s.muestras %}{{ s.muestras|length }}{% else %}-{% endif %}
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  {% else %}
-    <div class="alert alert-secondary">Este evento no tiene series temporales asociadas.</div>
-  {% endif %}
 {% endblock %}

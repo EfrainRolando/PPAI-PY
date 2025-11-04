@@ -58,7 +58,7 @@ def requiere_login(view_func):
 # ====== Vistas ======
 def home_view(request: HttpRequest) -> HttpResponse:
     if _get_user(request):
-        return redirect("eventos")
+        return redirect("menu_principal")
     return redirect("login")
 
 def login_view(request: HttpRequest) -> HttpResponse:
@@ -68,7 +68,7 @@ def login_view(request: HttpRequest) -> HttpResponse:
             u = form.cleaned_data["username"]
             p = form.cleaned_data["password"]
             if USUARIOS.get(u) == p:
-                resp = redirect("eventos")
+                resp = redirect("menu_principal")
                 _set_auth_cookie(resp, u)
                 return resp
             else:
@@ -81,6 +81,13 @@ def logout_view(request: HttpRequest) -> HttpResponse:
     resp = redirect("login")
     _clear_auth_cookie(resp)
     return resp
+
+@requiere_login
+def menu_principal_view(request: HttpRequest) -> HttpResponse:
+    """Muestra la 'carátula' o menú principal."""
+    usuario = _get_user(request)
+    return render(request, "redsismica/menu_principal.html", {"user": usuario})
+# --------------------
 
 @requiere_login
 def eventos_view(request: HttpRequest) -> HttpResponse:
@@ -107,52 +114,101 @@ def eventos_view(request: HttpRequest) -> HttpResponse:
     return render(request, "redsismica/eventos.html", {"eventos": eventos_vm, "user": usuario})
 
 
+
+@requiere_login
+def evento_modificar_view(request: HttpRequest, evento_id: int) -> HttpResponse:
+    usuario = _get_user(request)
+    evento = gestor.tomarSeleccionEventoSismico(evento_id)
+
+    if request.method == "POST":
+        # --- PASO 12 (Guardar): Capturar modificaciones ---
+        magnitud = request.POST.get("magnitud")
+        alcance_nombre = request.POST.get("alcance_nombre")
+        alcance_desc = request.POST.get("alcance_desc")
+        origen_nombre = request.POST.get("origen_nombre")
+        origen_detalle = request.POST.get("origen_detalle")
+
+        # --- PASO 16: Validación (simple) ---
+        if not magnitud or not alcance_nombre or not origen_nombre:
+            # Si hay error, volvemos a mostrar el formulario con un mensaje
+            datos = gestor.buscarDatosEventoSismico(evento)
+            return render(request, "redsismica/evento_modificar.html", {
+                "evento": datos["evento"],
+                "user": usuario,
+                "form_error": "Error: Magnitud, Alcance y Origen no pueden estar vacíos."
+            })
+        
+        # Si la validación es OK, actualizamos el objeto evento en memoria
+        gestor.tomarModificaciones(
+            evento=evento,
+            nuevoMagnitud=float(magnitud),
+            nuevoAlcanceNombre=alcance_nombre,
+            nuevoAlcanceDescripcion=alcance_desc,
+            nuevoOrigenNombre=origen_nombre,
+            nuevoOrigenDescripcion=origen_detalle
+        )
+        
+        # Redirigimos DE VUELTA a la página de detalle
+        messages.success(request, "Datos modificados correctamente.")
+        return redirect('evento_detalle', evento_id=evento.id_evento)
+
+    # --- GET (Mostrar el formulario por primera vez) ---
+    datos = gestor.buscarDatosEventoSismico(evento)
+    return render(request, "redsismica/evento_modificar.html", {
+        "evento": datos["evento"],
+        "user": usuario,
+        "form_error": None
+    })
+
+
 @requiere_login
 def evento_detalle_view(request: HttpRequest, evento_id: int) -> HttpResponse:
     usuario = _get_user(request)
-
-
-    # Carga de evento según tu Gestor
     evento = gestor.tomarSeleccionEventoSismico(evento_id)
-    gestor.cambiarEstadoABloqueadoEnRevision(evento, usuario)
+    
+    # --- PASO 8: Bloquear evento (Se ejecuta al Cargar la vista GET) ---
+    if request.method == "GET":
+        gestor.cambiarEstadoABloqueadoEnRevision(evento, usuario)
 
+    # -----------------------------------------------------------------
+    # --- PASOS 14, 15, 17: Se ejecutan en el POST ---
+    # -----------------------------------------------------------------
     if request.method == "POST":
         accion = request.POST.get("accion", "").strip().lower()
 
-        # Map clásico que ya usabas:
-        # aprobar -> 1, rechazar -> 2, guardar -> 3
-        # añadí "solicitar" como 3 (no destructivo)
-        ACCION_MAP = {"aprobar": 1, "rechazar": 2, "guardar": 3, "solicitar": 3}
-        Accion = ACCION_MAP.get(accion)
-        # Aprobación (confirmar) -> no hace cambios y vuelve a eventos
-        if Accion == 1:
-            gestor.cambiarEstadoAPteRevision(evento, usuario)
-            messages.info(request, "Confirmado: sin cambios aplicados")
-            return redirect("eventos")
+        # --- YA NO SE CAPTURAN MODIFICACIONES AQUÍ ---
+        # --- YA NO SE VALIDA NADA AQUÍ (excepto la acción) ---
 
-        # Rechazar -> cambia estado y vuelve a eventos
-        if (Accion == 2):
+        # --- PASO 14, 15, 17: Procesar la acción seleccionada ---
+        
+        # PASO 15: AS Selecciona "Rechazar"
+        if accion == "rechazar":
+            gestor.validarDatosEventoSismico(evento)
             gestor.cambiarEstadoARechazado(evento, usuario)
             messages.success(request, "Evento rechazado exitosamente")
             return redirect("eventos")
 
-        # Guardar / Solicitar revisión a experto -> lógica no destructiva que ya tenías
-        if Accion == 3:
-            gestor.cambiarEstadoAPteRevision(evento, usuario)
-            # acá podés disparar derivación si lo querés en el futuro
-            messages.success(request, "Solicitado: revisión a experto")
+        # Flujo Alternativo A6: AS selecciona "Confirmar"
+        if accion == "aprobar":
+            # (Usando los métodos que creamos en la respuesta anterior)
+            gestor.cambiarEstadoAConfirmado(evento, usuario)
+            messages.success(request, "Evento confirmado y aprobado.")
             return redirect("eventos")
 
-        # si llega algo raro, cerramos CU y seguimos
-        gestor.finCU()
+        # Flujo Alternativo A7: AS selecciona "Solicitar revisión"
+        if accion == "solicitar":
+            gestor.cambiarEstadoADerivado(evento, usuario)
+            messages.info(request, "Evento derivado a experto.")
+            return redirect("eventos")
 
-    # GET normal: traer datos
+    # --- GET normal: traer datos y mostrar la pág. ---
     datos = gestor.buscarDatosEventoSismico(evento)
-    series = gestor.obtenerDatosSeriesTemporales(evento)
+    
+    # Recogemos mensajes de éxito (ej. "Datos modificados correctamente")
+    page_messages = messages.get_messages(request)
 
     return render(request, "redsismica/evento_detalle.html", {
         "evento": datos["evento"],
-        "series": series,
         "user": usuario,
-        "mensaje": None,
+        "messages": page_messages, # Pasamos los mensajes a la plantilla
     })
