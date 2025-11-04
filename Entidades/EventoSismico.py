@@ -92,17 +92,10 @@ class EventoSismico:
             "estadoActual": self.getEstadoActual(),
         }
 
-    def bloquearEvento(self, estadoBloqueado: Estado, fechaHora, responsable):
-        """
-        Cierra TODOS los cambios vigentes (si hay) y SIEMPRE crea uno nuevo BloqueadoEnRevision.
-        Esto evita quedar sin 'actual' y corrige casos con múltiples 'actuales'.
-        """
-        hubo_vigentes = False
+    def bloquearEvento(self, estadoBloqueado, fechaHora, responsable):
         for c in self.cambiosEstado:
             if CambioEstado.esActual(c):
                 c.setFechaHoraFin(fechaHora)
-                hubo_vigentes = True
-        # crear SIEMPRE el nuevo cambio (aunque no hubiera vigente previo)
         self.crearCambioEstado(estadoBloqueado, fechaHora, responsable)
 
 
@@ -145,9 +138,6 @@ class EventoSismico:
         self.valorMagnitud = nuevoMagnitud
 
     def rechazarEvento(self, estadoRechazado: Estado, fechaHora, nombreUsuario):
-        """
-        Igual criterio que bloquearEvento: cerrar TODOS los vigentes y crear SIEMPRE el nuevo.
-        """
         for c in self.cambiosEstado:
             if CambioEstado.esActual(c):
                 c.setFechaHoraFin(fechaHora)

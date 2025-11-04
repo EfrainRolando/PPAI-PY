@@ -21,32 +21,18 @@ class Estado:
         "Cerrado",
     ]
 
-    AMBITOS_POSIBLES: ClassVar[List[str]] = [
-        "EventoSismico",
-        "SerieTemporal",
-        "MuestraSismica",
-    ]
-
-    def __init__(self, nombre: str, ambito: str = "EventoSismico"):
+    def __init__(self, nombre: str):
         # Sin validaciones ni normalizaciones
         self.nombre = nombre
-        self.ambito = ambito
 
     # ===== Métodos de clase: devolver listas tal cual =====
     @classmethod
     def nombres_posibles(cls) -> List[str]:
         return cls.NOMBRES_POSIBLES
 
-    @classmethod
-    def ambitos_posibles(cls) -> List[str]:
-        return cls.AMBITOS_POSIBLES
-
     # ---------- Métodos de clase que el Gestor va a llamar ----------
     def sosBloqueadoEnRevision(self) -> bool:
         return self.nombre == "BloqueadoEnRevision"
-
-    def esAmbitoES(self) -> bool:
-        return self.ambito == "EventoSismico"
 
     def sosAutoDetectado(self) -> bool:
         return self.nombre == "AutoDetectado"

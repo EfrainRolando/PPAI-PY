@@ -114,6 +114,7 @@ def evento_detalle_view(request: HttpRequest, evento_id: int) -> HttpResponse:
 
     # Carga de evento según tu Gestor
     evento = gestor.tomarSeleccionEventoSismico(evento_id)
+    gestor.cambiarEstadoABloqueadoEnRevision(evento, usuario)
 
     if request.method == "POST":
         accion = request.POST.get("accion", "").strip().lower()
@@ -133,9 +134,7 @@ def evento_detalle_view(request: HttpRequest, evento_id: int) -> HttpResponse:
 
         # Rechazar -> cambia estado y vuelve a eventos
         if (Accion == 2):
-            EstadoRechazado = gestor.buscarEstadoRechazado()
-            fechaHoraActual = gestor.getFechaYHoraActual()
-            gestor.cambiarEstadoARechazado(evento, EstadoRechazado, fechaHoraActual, nombreUsuario)
+            gestor.cambiarEstadoARechazado(evento, usuario)
             messages.success(request, "Evento rechazado exitosamente")
             return redirect("eventos")
 

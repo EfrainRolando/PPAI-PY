@@ -24,14 +24,9 @@ class GestorRevisionResultados:
         from Entidades.PantallaRevision import PantallaRevision
         PantallaRevision(self.sesion).mostrarDatosEventosSismicos(datos_ordenados)
         EventoSeleccionado = PantallaRevision(self.sesion).solicitarSeleccionEventoSismico()
-        EstadoBloqueado = self.buscarEstadoBloqueadoEnRevision()
-        fechaHoraActual = self.getFechaYHoraActual()
-        self.cambiarEstadoABloqueadoEnRevision(EventoSeleccionado, EstadoBloqueado, fechaHoraActual)
+        self.cambiarEstadoABloqueadoEnRevision(EventoSeleccionado)
         datos = self.buscarDatosEventoSismico(EventoSeleccionado)
         PantallaRevision(self.sesion).mostrarDatosEventoSismico(datos)
-        self.imprimir_series_evento(
-            EventoSeleccionado)  # Metodo que no pertenece al diagrama, pero sirve para mostrar las series temporales en consola o en el front
-        # self.llamarCUGenerarSismograma
         self.habilitarOpcionMapa()
         self.habilitarModificaciones(EventoSeleccionado)
         datos = self.buscarDatosEventoSismico(EventoSeleccionado)
@@ -39,11 +34,7 @@ class GestorRevisionResultados:
         PantallaRevision(self.sesion).presentarAcciones()
         Accion = PantallaRevision(self.sesion).tomarSeleccionAccion()
         self.validarSeleccionAccion(Accion)
-        nombreUsuario = self.buscarUsuario()
-        if Accion == 2 and EventoSeleccionado.valorMagnitud is not None and EventoSeleccionado.valorMagnitud is not None and EventoSeleccionado.origenGeneracion is not None:
-            EstadoRechazado = self.buscarEstadoRechazado()
-            fechaHoraActual = self.getFechaYHoraActual()
-            self.cambiarEstadoARechazado(EventoSeleccionado, EstadoRechazado, fechaHoraActual, nombreUsuario)
+        self.cambiarEstadoARechazado(EventoSeleccionado)
         self.finCU()
 
     def buscarSismosARevisar(self) -> List[dict]:
@@ -66,19 +57,18 @@ class GestorRevisionResultados:
             if eleccion == e.id_evento:
                 return e
 
+    def cambiarEstadoABloqueadoEnRevision(self, EventoSeleccionado, responsable) -> None:
+        estadoBloqueado = self.buscarEstadoBloqueadoEnRevision()
+        fechaHoraInicio = self.getFechaYHoraActual()
+        EventoSismico.bloquearEvento(EventoSeleccionado, estadoBloqueado, fechaHoraInicio, responsable)
+
     def buscarEstadoBloqueadoEnRevision(self) -> Estado:
-        for a in Estado.AMBITOS_POSIBLES:
-            if a == "EventoSismico":
-                for n in Estado.NOMBRES_POSIBLES:
-                    if n == "BloqueadoEnRevision":
-                        return Estado(n, a)
+        for n in Estado.NOMBRES_POSIBLES:
+            if n == "BloqueadoEnRevision":
+                return Estado(n)
 
     def getFechaYHoraActual(self) -> datetime:
-        return datetime.now()
-
-    def cambiarEstadoABloqueadoEnRevision(self, EventoSeleccionado, estadoBloqueado: Estado, fechaHoraInicio,
-                                          responsable="Usuario") -> None:
-        EventoSismico.bloquearEvento(EventoSeleccionado, estadoBloqueado, fechaHoraInicio, responsable)
+            return datetime.now()
 
     def buscarDatosEventoSismico(self, evento: EventoSismico) -> Dict[str, Any]:
         EventoSismico.eventoSeleccionado = evento
@@ -88,64 +78,6 @@ class GestorRevisionResultados:
 
     def obtenerDatosSeriesTemporales(self, evento: EventoSismico) -> list[dict]:
         return evento.getDatosSeriesTemporales()
-
-    def imprimir_series_evento(self, evento):
-        def _fmt(x):  # para mostrar None prolijo
-            return "-" if x is None else x
-
-        series = self.obtenerDatosSeriesTemporales(evento)
-
-        print("=== SERIES TEMPORALES ASOCIADAS ===")
-        if not series:
-            print("(Sin series temporales)")
-            return
-
-        for i, s in enumerate(series, 1):
-            # claves esperadas
-            condicion = s.get("condicionMarea")
-            desde = s.get("desde")
-            hasta = s.get("hasta")
-            freq = s.get("frecuencia")
-            # soporta tu versión previa ("Muestras")
-            muestras = s.get("muestras") or s.get("Muestras") or []
-            codigo = (
-                    s.get("codigoEstacion")
-                    or s.get("Codigo Estacion")
-                    or s.get("CodigoEstacion")  # por si en algún lado quedó sin espacio
-            )
-
-            print(f"\n— Serie {i} —")
-            print(f"  Condición de marea : {_fmt(condicion)}")
-            print(f"  Desde              : {_fmt(desde)}")
-            print(f"  Hasta              : {_fmt(hasta)}")
-            print(f"  Frecuencia         : {_fmt(freq)} Hz")
-            print(f"  Muestras           : {len(muestras)}")
-            print(f"  Estación           : {_fmt(codigo)}")
-
-            if not muestras:
-                print("    (Sin muestras)")
-                continue
-
-            for j, m in enumerate(muestras, 1):
-                fh = m.get("fechaHoraMuestra")
-                # soporta tu typo anterior "detalles:"
-                detalles = m.get("detalles") or m.get("detalles:") or []
-
-                print(f"    ▸ Muestra {j}: {_fmt(fh)}  (detalles={len(detalles)})")
-                if not detalles:
-                    print("        (Sin detalles)")
-                    continue
-
-                for k, d in enumerate(detalles, 1):
-                    # soporta "valor"/"Valor" y "tipoDeDato"/"TipoDeDato"
-                    val = d.get("valor", d.get("Valor"))
-                    tipo = d.get("tipoDeDato", d.get("TipoDeDato"))
-                    denom = tipo.get("denominacion") if isinstance(tipo, dict) else None
-                    unidad = tipo.get("nombreUnidadDeMedida") if isinstance(tipo, dict) else None
-                    sufijo_tipo = ""
-                    if denom or unidad:
-                        sufijo_tipo = f"  → Tipo: {_fmt(denom)} ({_fmt(unidad)})"
-                    print(f"        - Detalle {k}: valor={_fmt(val)}{sufijo_tipo}")
 
     def habilitarOpcionMapa(self) -> bool:
         from Entidades.PantallaRevision import PantallaRevision
@@ -169,14 +101,14 @@ class GestorRevisionResultados:
         }
 
     def buscarEstadoRechazado(self) -> Estado:
-        for a in Estado.AMBITOS_POSIBLES:
-            if a == "EventoSismico":
-                for n in Estado.NOMBRES_POSIBLES:
-                    if n == "Rechazado":
-                        return Estado(n, a)
+        for n in Estado.NOMBRES_POSIBLES:
+            if n == "Rechazado":
+                return Estado(n)
 
-    def cambiarEstadoARechazado(self, EventoSeleccionado, EstadoRechazado, fechaHoraActual, nombreUsuario) -> None:
-        EventoSismico.rechazarEvento(EventoSeleccionado, EstadoRechazado, fechaHoraActual, nombreUsuario)
+    def cambiarEstadoARechazado(self, EventoSeleccionado, responsable) -> Void:
+            EstadoRechazado = self.buscarEstadoRechazado()
+            fechaHoraActual = self.getFechaYHoraActual()
+            EventoSismico.rechazarEvento(EventoSeleccionado, EstadoRechazado, fechaHoraActual, responsable)
 
     def validarSeleccionAccion(self, Accion):
         if Accion >= 0 or Accion <= 4:
