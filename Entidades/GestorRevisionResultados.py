@@ -58,10 +58,12 @@ class GestorRevisionResultados:
             if eleccion == e.id_evento:
                 return e
 
-    def cambiarEstadoABloqueadoEnRevision(self, EventoSeleccionado, responsable) -> None:
+    def cambiarEstadoABloqueadoEnRevision(self, evento_id, responsable) -> None:
+        EventoSeleccionado = self.tomarSeleccionEventoSismico(evento_id)
+        if not EventoSeleccionado: return
         estadoBloqueado = self.buscarEstadoBloqueadoEnRevision()
         fechaHoraInicio = self.getFechaYHoraActual()
-        EventoSismico.bloquearEvento(EventoSeleccionado, estadoBloqueado, fechaHoraInicio, responsable)
+        EventoSeleccionado.bloquearEvento(estadoBloqueado, fechaHoraInicio, responsable)
 
     def buscarEstadoBloqueadoEnRevision(self) -> Estado:
         for n in Estado.NOMBRES_POSIBLES:
@@ -71,8 +73,10 @@ class GestorRevisionResultados:
     def getFechaYHoraActual(self) -> datetime:
             return datetime.now()
 
-    def buscarDatosEventoSismico(self, evento: EventoSismico) -> Dict[str, Any]:
-        EventoSismico.eventoSeleccionado = evento
+    def buscarDatosEventoSismico(self, evento_id: EventoSismico) -> Dict[str, Any]:
+        evento = self.tomarSeleccionEventoSismico(evento_id)
+        if not evento: return {"evento": {}} # Manejar si no lo encuentra
+
         return {
             "evento": evento.getDatosEvento()
         }
@@ -106,17 +110,20 @@ class GestorRevisionResultados:
             if n == "Rechazado":
                 return Estado(n)
 
-    def cambiarEstadoARechazado(self, EventoSeleccionado, responsable) -> None:
+    def cambiarEstadoARechazado(self, evento_id, responsable) -> None:
+            EventoSeleccionado = self.tomarSeleccionEventoSismico(evento_id) # <-- LÓGICA MOVIDA AQUÍ
+            if not EventoSeleccionado: return
             EstadoRechazado = self.buscarEstadoRechazado()
             fechaHoraActual = self.getFechaYHoraActual()
-            EventoSismico.rechazarEvento(EventoSeleccionado, EstadoRechazado, fechaHoraActual, responsable)
+            EventoSeleccionado.rechazarEvento(EstadoRechazado, fechaHoraActual, responsable)
 
     def validarSeleccionAccion(self, Accion):
         if Accion >= 0 or Accion <= 4:
             if Accion != 2:
                 print("Accion No valida!")
 
-    def validarDatosEventoSismico(self, EventoSeleccionado):
+    def validarDatosEventoSismico(self, evento_id):
+        EventoSeleccionado = self.tomarSeleccionEventoSismico(evento_id)
         if EventoSeleccionado.getDatosEvento() is None:
             print("Error: Los datos del evento sismico no son validos.")
 
@@ -132,17 +139,21 @@ class GestorRevisionResultados:
             if n == "Confirmado":
                 return Estado(n)
             
-    def cambiarEstadoAConfirmado(self, EventoSeleccionado, responsable) -> None:
-            Estado= self.buscarConfirmado()
-            fechaHoraActual = self.getFechaYHoraActual()
-            EventoSismico.confirmar(EventoSeleccionado, Estado, fechaHoraActual, responsable)
+    def cambiarEstadoAConfirmado(self, evento_id, responsable) -> None:
+        EventoSeleccionado = self.tomarSeleccionEventoSismico(evento_id) # <-- LÓGICA MOVIDA AQUÍ
+        if not EventoSeleccionado: return
+        Estado = self.buscarConfirmado()
+        fechaHoraActual = self.getFechaYHoraActual()
+        EventoSeleccionado.confirmar(Estado, fechaHoraActual, responsable)
             
     def buscarDerivado(self) -> None:
         for n in Estado.NOMBRES_POSIBLES:
             if n == "Derivado":
                 return Estado(n)
             
-    def cambiarEstadoADerivado(self, EventoSeleccionado, responsable) -> None:
-            Estado= self.buscarDerivado()
-            fechaHoraActual = self.getFechaYHoraActual()
-            EventoSismico.derivar(EventoSeleccionado, Estado, fechaHoraActual, responsable)
+    def cambiarEstadoADerivado(self, evento_id, responsable) -> None:
+        EventoSeleccionado = self.tomarSeleccionEventoSismico(evento_id) # <-- LÓGICA MOVIDA AQUÍ
+        if not EventoSeleccionado: return
+        Estado = self.buscarDerivado()
+        fechaHoraActual = self.getFechaYHoraActual()
+        EventoSeleccionado.rechazarEvento(Estado, fechaHoraActual, responsable)
