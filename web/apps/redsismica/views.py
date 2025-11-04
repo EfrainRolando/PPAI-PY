@@ -20,6 +20,9 @@ from Entidades.Sesion import Sesion
 COOKIE_NAME = "auth_user"
 COOKIE_MAX_AGE = 60 * 60 * 8  # 8 horas
 
+sesion = Sesion()
+gestor = GestorRevisionResultados(sesion)
+
 # Usuarios de ejemplo (reemplazá por tu verificación real si quisieras)
 USUARIOS = {
     "efra": "1234",
@@ -42,6 +45,7 @@ def _get_user(request: HttpRequest) -> str | None:
         return data.get("u")
     except signing.BadSignature:
         return None
+
 
 def requiere_login(view_func):
     @wraps(view_func)
@@ -83,9 +87,6 @@ def eventos_view(request: HttpRequest) -> HttpResponse:
     """Lista de eventos usando SOLO el Gestor (filtra y ordena)."""
     usuario = _get_user(request)
 
-    sesion = Sesion()
-    gestor = GestorRevisionResultados(sesion)
-
     # 1) Filtra eventos a revisar (el dominio decide qué entra)
     datos = gestor.buscarSismosARevisar()   # -> list[dict]
     # 2) Ordena (también en el dominio)
@@ -109,8 +110,7 @@ def eventos_view(request: HttpRequest) -> HttpResponse:
 @requiere_login
 def evento_detalle_view(request: HttpRequest, evento_id: int) -> HttpResponse:
     usuario = _get_user(request)
-    sesion = Sesion()
-    gestor = GestorRevisionResultados(sesion)
+
 
     # Carga de evento según tu Gestor
     evento = gestor.tomarSeleccionEventoSismico(evento_id)
@@ -124,9 +124,6 @@ def evento_detalle_view(request: HttpRequest, evento_id: int) -> HttpResponse:
         # añadí "solicitar" como 3 (no destructivo)
         ACCION_MAP = {"aprobar": 1, "rechazar": 2, "guardar": 3, "solicitar": 3}
         Accion = ACCION_MAP.get(accion)
-
-        nombreUsuario = usuario
-
         # Aprobación (confirmar) -> no hace cambios y vuelve a eventos
         if Accion == 1:
             messages.info(request, "Confirmado: sin cambios aplicados")

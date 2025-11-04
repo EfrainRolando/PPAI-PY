@@ -137,8 +137,8 @@ class EventoSismico:
     def setNuevaMagnitud(self, nuevoMagnitud):
         self.valorMagnitud = nuevoMagnitud
 
-    def rechazarEvento(self, estadoRechazado: Estado, fechaHora, nombreUsuario):
+    def rechazarEvento(self, estadoRechazado: Estado, fechaHora, responsable):
         for c in self.cambiosEstado:
             if CambioEstado.esActual(c):
                 c.setFechaHoraFin(fechaHora)
-        self.crearCambioEstado(estadoRechazado, fechaHora, nombreUsuario)
+        self.crearCambioEstado(estadoRechazado, fechaHora, responsable)

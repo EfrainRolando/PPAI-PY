@@ -27,7 +27,7 @@ class _Cache:
 def to_dom_estado(o: orm.Estado, cache: _Cache) -> Estado:
     if o.id in cache.estados:
         return cache.estados[o.id]
-    d = Estado(o.nombre, o.ambito)
+    d = Estado(o.nombre)
     cache.estados[o.id] = d
     return d
 

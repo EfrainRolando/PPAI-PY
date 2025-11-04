@@ -105,7 +105,7 @@ class GestorRevisionResultados:
             if n == "Rechazado":
                 return Estado(n)
 
-    def cambiarEstadoARechazado(self, EventoSeleccionado, responsable) -> Void:
+    def cambiarEstadoARechazado(self, EventoSeleccionado, responsable) -> None:
             EstadoRechazado = self.buscarEstadoRechazado()
             fechaHoraActual = self.getFechaYHoraActual()
             EventoSismico.rechazarEvento(EventoSeleccionado, EstadoRechazado, fechaHoraActual, responsable)
