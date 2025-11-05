@@ -2,11 +2,9 @@
 {% block content %}
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h1 class="h4">Modificar Evento #{{ evento.id_evento }}</h1>
-    <div>Hola, {{ user }}</div>
   </div>
 
-<div class="card mb-3">
-  <div class="card-body">
+<div class="card mb-3 card-edit"> <div class="card-body">
     <form method="post">
       {% csrf_token %}
 

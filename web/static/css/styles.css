@@ -1,0 +1,144 @@
+/* --- Paleta de Colores "Sísmica" ---
+   Usaremos un tema oscuro (tech) con acentos en naranja/ámbar 
+   que recuerdan a las alertas y a la tierra.
+*/
+:root {
+  --color-fondo: #222831; /* Un gris oscuro casi negro */
+  --color-superficie: #393E46; /* Un gris más claro para tarjetas */
+  --color-primario: #00ADB5; /* Un azul/verde "tech" */
+  --color-acento: #FF5722; /* Naranja vibrante para alertas/botones */
+  --color-texto: #EEEEEE; /* Texto claro */
+  --color-texto-secundario: #ADB5BD;
+}
+
+body {
+  background-color: var(--color-fondo);
+  color: var(--color-texto);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* --- 1. Estilos Base --- */
+
+.navbar {
+  background-color: var(--color-superficie) !important;
+  border-bottom: 2px solid var(--color-primario);
+}
+
+.navbar-brand, .nav-link, .btn-outline-secondary {
+  color: var(--color-texto) !important;
+}
+
+.btn-outline-secondary:hover {
+  background-color: var(--color-primario);
+  border-color: var(--color-primario);
+}
+
+.card {
+  background-color: var(--color-superficie);
+  border: 1px solid #4a5058;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.h1, .h2, .h3, .h4, .h5, .h6 {
+  color: var(--color-texto);
+}
+
+.text-muted {
+  color: var(--color-texto-secundario) !important;
+}
+
+/* Botón principal */
+.btn-primary {
+  background-color: var(--color-acento);
+  border-color: var(--color-acento);
+  font-weight: bold;
+}
+.btn-primary:hover {
+  background-color: #e64a19;
+  border-color: #e64a19;
+}
+
+/* --- 2. Página de Login --- */
+.login-container {
+  max-width: 450px;
+  margin: 5rem auto;
+  padding: 2.5rem;
+  background-color: var(--color-superficie);
+  border-radius: 8px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.login-header i {
+  font-size: 4rem; /* Tamaño del ícono */
+  color: var(--color-primario);
+}
+
+.login-header h1 {
+  margin-top: 1rem;
+  color: var(--color-texto);
+}
+
+.form-control {
+  background-color: var(--color-fondo);
+  border: 1px solid #4a5058;
+  color: var(--color-texto);
+}
+.form-control:focus {
+  background-color: var(--color-fondo);
+  color: var(--color-texto);
+  border-color: var(--color-primario);
+  box-shadow: 0 0 0 0.25rem rgba(0, 173, 181, 0.25);
+}
+
+/* --- 3. Menú Principal (Onda Sísmica) --- */
+.card-menu-principal {
+  background: 
+    linear-gradient(rgba(57, 62, 70, 0.85), rgba(57, 62, 70, 0.85)),
+    url('https://images.unsplash.com/photo-1590234557766-0f1c4966601f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80');
+  background-size: cover;
+  background-position: center;
+  border: 1px solid var(--color-primario);
+}
+
+/* Animación de Pulso para el botón */
+.btn-pulse {
+  animation: pulse-animation 2s infinite;
+}
+
+@keyframes pulse-animation {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 87, 34, 0.7);
+  }
+  100% {
+    box-shadow: 0 0 0 20px rgba(255, 87, 34, 0);
+  }
+}
+
+/* --- 4. Página de Eventos (Tabla) --- */
+.table {
+  --bs-table-bg: var(--color-superficie);
+  --bs-table-striped-bg: #4a5058;
+  --bs-table-color: var(--color-texto);
+  border-color: #4a5058;
+}
+thead th {
+  background-color: #2a2f36;
+  color: var(--color-primario);
+  border-bottom: 2px solid var(--color-primario) !important;
+}
+
+/* --- 5. Página de Modificar Evento --- */
+.card-edit {
+  background-color: #3b3a30; /* Fondo con tinte "amarillo" oscuro */
+  border-color: var(--color-acento);
+}
+
+.card-edit .form-label {
+  color: var(--color-acento);
+  font-weight: bold;
+}
