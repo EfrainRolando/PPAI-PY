@@ -14,10 +14,10 @@ class GestorRevisionResultados:
         
         self.sesion = sesion
         self.repo = RepositorioEventosDjango()
-        self.eventoSeleccionado = None
+        self.eventoSeleccionado: Optional[EventoSismico] = None
         self.eventos: List[EventoSismico] = self.repo.obtener_eventos()
 
-    def registrarResultado(self) -> None:
+    def registrarResultado(self) -> None: #Logica no usada por la web
         print("Gestor creado → registrando resultado...")
         datos = self.buscarSismosARevisar()
         datos_ordenados = self.ordenarEventosPorFechaOcurrencia(datos)
@@ -52,18 +52,21 @@ class GestorRevisionResultados:
             datos,
             key=lambda d: d.get("fechaHoraOcurrencia", datetime.min)
         )
+    def limpiar_seleccion(self) -> None:
+        """Limpia el evento sísmico seleccionado de la memoria del gestor."""
+        self.eventoSeleccionado = None
 
     def tomarSeleccionEventoSismico(self, eleccion) -> EventoSismico:
         for e in self.eventos:
             if eleccion == e.id_evento:
+                self.eventoSeleccionado = e
                 return e
 
-    def cambiarEstadoABloqueadoEnRevision(self, evento_id, responsable) -> None:
-        EventoSeleccionado = self.tomarSeleccionEventoSismico(evento_id)
-        if not EventoSeleccionado: return
+    def cambiarEstadoABloqueadoEnRevision(self, responsable) -> None:
         estadoBloqueado = self.buscarEstadoBloqueadoEnRevision()
         fechaHoraInicio = self.getFechaYHoraActual()
-        EventoSeleccionado.bloquearEvento(estadoBloqueado, fechaHoraInicio, responsable)
+        if estadoBloqueado:
+            self.eventoSeleccionado.bloquearEvento(estadoBloqueado, fechaHoraInicio, responsable)
 
     def buscarEstadoBloqueadoEnRevision(self) -> Estado:
         for n in Estado.NOMBRES_POSIBLES:
@@ -73,12 +76,13 @@ class GestorRevisionResultados:
     def getFechaYHoraActual(self) -> datetime:
             return datetime.now()
 
-    def buscarDatosEventoSismico(self, evento_id: EventoSismico) -> Dict[str, Any]:
-        evento = self.tomarSeleccionEventoSismico(evento_id)
-        if not evento: return {"evento": {}} # Manejar si no lo encuentra
+    def buscarDatosEventoSismico(self) -> Dict[str, Any]:
+        # Ya no recibe evento_id, usa self.eventoSeleccionado
+        if not self.eventoSeleccionado: 
+            return {"evento": {}} # Manejar si no hay nada seleccionado
 
         return {
-            "evento": evento.getDatosEvento()
+            "evento": self.eventoSeleccionado.getDatosEvento()
         }
 
     def obtenerDatosSeriesTemporales(self, evento: EventoSismico) -> list[dict]:
@@ -96,13 +100,22 @@ class GestorRevisionResultados:
         PantallaRevision(self.sesion).solicitarModificaciones(evento)
 
     def tomarModificaciones(self, nuevoOrigenNombre, nuevoOrigenDescripcion, nuevoAlcanceNombre,
-                            nuevoAlcanceDescripcion, nuevoMagnitud, evento: EventoSismico):
-        EventoSismico.EventoSeleccionado = evento
-        evento.setNuevoOrigen(nuevoOrigenNombre, nuevoOrigenDescripcion)
-        evento.setNuevoAlcance(nuevoAlcanceNombre, nuevoAlcanceDescripcion)
-        evento.setNuevaMagnitud(nuevoMagnitud)
+                            nuevoAlcanceDescripcion, nuevoMagnitud):
+        # Ya no recibe evento, usa self.eventoSeleccionado
+        if not self.eventoSeleccionado: 
+            return {}
+
+        # Actualiza el objeto en memoria
+        self.eventoSeleccionado.setNuevoOrigen(nuevoOrigenNombre, nuevoOrigenDescripcion)
+        self.eventoSeleccionado.setNuevoAlcance(nuevoAlcanceNombre, nuevoAlcanceDescripcion)
+        self.eventoSeleccionado.setNuevaMagnitud(float(nuevoMagnitud))
+        
+        # (Aquí faltaría persistir los cambios en el repositorio,
+        # pero el repo actual no tiene un método para "actualizar"
+        # datos maestros del evento, solo para cambiar estado).
+        
         return {
-            "evento": evento.getDatosEvento()
+            "evento": self.eventoSeleccionado.getDatosEvento()
         }
 
     def buscarEstadoRechazado(self) -> Estado:
@@ -110,22 +123,23 @@ class GestorRevisionResultados:
             if n == "Rechazado":
                 return Estado(n)
 
-    def cambiarEstadoARechazado(self, evento_id, responsable) -> None:
-            EventoSeleccionado = self.tomarSeleccionEventoSismico(evento_id) # <-- LÓGICA MOVIDA AQUÍ
-            if not EventoSeleccionado: return
-            EstadoRechazado = self.buscarEstadoRechazado()
-            fechaHoraActual = self.getFechaYHoraActual()
-            EventoSeleccionado.rechazarEvento(EstadoRechazado, fechaHoraActual, responsable)
+    def cambiarEstadoARechazado(self, responsable : str) -> None:
+        EstadoRechazado = self.buscarEstadoRechazado()
+        fechaHoraActual = self.getFechaYHoraActual()
+        if EstadoRechazado:
+            self.eventoSeleccionado.rechazarEvento(EstadoRechazado, fechaHoraActual, responsable)
 
     def validarSeleccionAccion(self, Accion):
         if Accion >= 0 or Accion <= 4:
             if Accion != 2:
                 print("Accion No valida!")
 
-    def validarDatosEventoSismico(self, evento_id):
-        EventoSeleccionado = self.tomarSeleccionEventoSismico(evento_id)
-        if EventoSeleccionado.getDatosEvento() is None:
+    def validarDatosEventoSismico(self):
+        # Ya no recibe evento_id, usa self.eventoSeleccionado
+        if not self.eventoSeleccionado or self.eventoSeleccionado.getDatosEvento() is None:
             print("Error: Los datos del evento sismico no son validos.")
+            # En una app web, esto debería lanzar una excepción
+            # raise ValueError("Datos de evento no válidos")
 
     def buscarUsuario(self) -> str:
         # Usa la misma instancia; si no hay login, Sesion lo pedirá
@@ -139,21 +153,21 @@ class GestorRevisionResultados:
             if n == "Confirmado":
                 return Estado(n)
             
-    def cambiarEstadoAConfirmado(self, evento_id, responsable) -> None:
-        EventoSeleccionado = self.tomarSeleccionEventoSismico(evento_id) # <-- LÓGICA MOVIDA AQUÍ
-        if not EventoSeleccionado: return
-        Estado = self.buscarConfirmado()
+    def cambiarEstadoAConfirmado(self, responsable) -> None:
+        estado = self.buscarConfirmado()
         fechaHoraActual = self.getFechaYHoraActual()
-        EventoSeleccionado.confirmar(Estado, fechaHoraActual, responsable)
+        if estado:
+            self.eventoSeleccionado.confirmar(estado, fechaHoraActual, responsable)
             
     def buscarDerivado(self) -> None:
         for n in Estado.NOMBRES_POSIBLES:
             if n == "Derivado":
                 return Estado(n)
             
-    def cambiarEstadoADerivado(self, evento_id, responsable) -> None:
-        EventoSeleccionado = self.tomarSeleccionEventoSismico(evento_id) # <-- LÓGICA MOVIDA AQUÍ
-        if not EventoSeleccionado: return
-        Estado = self.buscarDerivado()
+    def cambiarEstadoADerivado(self, responsable) -> None:
+        estado = self.buscarDerivado()
         fechaHoraActual = self.getFechaYHoraActual()
-        EventoSeleccionado.rechazarEvento(Estado, fechaHoraActual, responsable)
+        if estado:
+            # El gestor original llamaba a 'rechazarEvento'
+            # Lo corrijo para que llame a 'derivar'
+            self.eventoSeleccionado.derivar(estado, fechaHoraActual, responsable)

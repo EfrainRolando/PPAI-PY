@@ -20,6 +20,7 @@ from Entidades.Sesion import Sesion
 COOKIE_NAME = "auth_user"
 COOKIE_MAX_AGE = 60 * 60 * 8  # 8 horas
 
+# --- INSTANCIA ÚNICA (Como pediste) ---
 sesion = Sesion()
 gestor = GestorRevisionResultados(sesion)
 
@@ -94,6 +95,9 @@ def eventos_view(request: HttpRequest) -> HttpResponse:
     """Lista de eventos usando SOLO el Gestor (filtra y ordena)."""
     usuario = _get_user(request)
 
+    # --- NUEVO: Limpia el evento seleccionado al volver al menú ---
+    gestor.limpiar_seleccion()
+
     # 1) Filtra eventos a revisar (el dominio decide qué entra)
     datos = gestor.buscarSismosARevisar()   # -> list[dict]
     # 2) Ordena (también en el dominio)
@@ -118,7 +122,16 @@ def eventos_view(request: HttpRequest) -> HttpResponse:
 @requiere_login
 def evento_modificar_view(request: HttpRequest, evento_id: int) -> HttpResponse:
     usuario = _get_user(request)
-    evento = gestor.tomarSeleccionEventoSismico(evento_id)
+    
+    # --- NUEVO: Selecciona el evento en el gestor ---
+    # Esto es necesario si el usuario recarga esta página
+    if not gestor.eventoSeleccionado or gestor.eventoSeleccionado.id_evento != evento_id:
+        if not gestor.seleccionar_evento_por_id(evento_id):
+            messages.error(request, "Evento no encontrado o no disponible.")
+            return redirect("eventos")
+
+    # --- REMOVIDO ---
+    # evento = gestor.tomarSeleccionEventoSismico(evento_id)
 
     if request.method == "POST":
         # --- PASO 12 (Guardar): Capturar modificaciones ---
@@ -131,7 +144,8 @@ def evento_modificar_view(request: HttpRequest, evento_id: int) -> HttpResponse:
         # --- PASO 16: Validación (simple) ---
         if not magnitud or not alcance_nombre or not origen_nombre:
             # Si hay error, volvemos a mostrar el formulario con un mensaje
-            datos = gestor.buscarDatosEventoSismico(evento)
+            # --- MODIFICADO ---
+            datos = gestor.buscarDatosEventoSismico() # Usa el evento en memoria
             return render(request, "redsismica/evento_modificar.html", {
                 "evento": datos["evento"],
                 "user": usuario,
@@ -139,8 +153,9 @@ def evento_modificar_view(request: HttpRequest, evento_id: int) -> HttpResponse:
             })
         
         # Si la validación es OK, actualizamos el objeto evento en memoria
+        # --- MODIFICADO ---
         gestor.tomarModificaciones(
-            evento=evento,
+            # evento=evento, <-- Argumento removido
             nuevoMagnitud=float(magnitud),
             nuevoAlcanceNombre=alcance_nombre,
             nuevoAlcanceDescripcion=alcance_desc,
@@ -150,10 +165,12 @@ def evento_modificar_view(request: HttpRequest, evento_id: int) -> HttpResponse:
         
         # Redirigimos DE VUELTA a la página de detalle
         messages.success(request, "Datos modificados correctamente.")
-        return redirect('evento_detalle', evento_id=evento.id_evento)
+        # Usamos el evento_id del parámetro de la URL
+        return redirect('evento_detalle', evento_id=evento_id)
 
     # --- GET (Mostrar el formulario por primera vez) ---
-    datos = gestor.buscarDatosEventoSismico(evento)
+    # --- MODIFICADO ---
+    datos = gestor.buscarDatosEventoSismico() # Usa el evento en memoria
     return render(request, "redsismica/evento_modificar.html", {
         "evento": datos["evento"],
         "user": usuario,
@@ -166,8 +183,15 @@ def evento_detalle_view(request: HttpRequest, evento_id: int) -> HttpResponse:
     usuario = _get_user(request)
     
     # --- PASO 8: Bloquear evento (Se ejecuta al Cargar la vista GET) ---
+    
+    # --- NUEVO: Selecciona el evento en el gestor ---
+    if not gestor.tomarSeleccionEventoSismico(evento_id):
+        messages.error(request, "Evento no encontrado o no disponible.")
+        return redirect("eventos")
+    
     if request.method == "GET":
-        gestor.cambiarEstadoABloqueadoEnRevision(evento_id, usuario)
+        # --- MODIFICADO ---
+        gestor.cambiarEstadoABloqueadoEnRevision(usuario) # Ya no pasamos evento_id
 
     # -----------------------------------------------------------------
     # --- PASOS 14, 15, 17: Se ejecutan en el POST ---
@@ -175,33 +199,31 @@ def evento_detalle_view(request: HttpRequest, evento_id: int) -> HttpResponse:
     if request.method == "POST":
         accion = request.POST.get("accion", "").strip().lower()
 
-        # --- YA NO SE CAPTURAN MODIFICACIONES AQUÍ ---
-        # --- YA NO SE VALIDA NADA AQUÍ (excepto la acción) ---
-
-        # --- PASO 14, 15, 17: Procesar la acción seleccionada ---
-        
-        # PASO 15: AS Selecciona "Rechazar"
+        # --- PASO 15: AS Selecciona "Rechazar" ---
         if accion == "rechazar":
-            gestor.validarDatosEventoSismico(evento_id)
-            gestor.cambiarEstadoARechazado(evento_id, usuario)
+            # --- MODIFICADO ---
+            gestor.validarDatosEventoSismico() # Usa evento en memoria
+            gestor.cambiarEstadoARechazado(usuario) # Usa evento en memoria
             messages.success(request, "Evento rechazado exitosamente")
             return redirect("eventos")
 
         # Flujo Alternativo A6: AS selecciona "Confirmar"
         if accion == "aprobar":
-            # (Usando los métodos que creamos en la respuesta anterior)
-            gestor.cambiarEstadoAConfirmado(evento_id, usuario)
+            # --- MODIFICADO ---
+            gestor.cambiarEstadoAConfirmado(usuario) # Usa evento en memoria
             messages.success(request, "Evento confirmado y aprobado.")
             return redirect("eventos")
 
         # Flujo Alternativo A7: AS selecciona "Solicitar revisión"
         if accion == "solicitar":
-            gestor.cambiarEstadoADerivado(evento_id, usuario)
+            # --- MODIFICADO ---
+            gestor.cambiarEstadoADerivado(usuario) # Usa evento en memoria
             messages.info(request, "Evento derivado a experto.")
             return redirect("eventos")
 
     # --- GET normal: traer datos y mostrar la pág. ---
-    datos = gestor.buscarDatosEventoSismico(evento_id)
+    # --- MODIFICADO ---
+    datos = gestor.buscarDatosEventoSismico() # Usa evento en memoria
     
     # Recogemos mensajes de éxito (ej. "Datos modificados correctamente")
     page_messages = messages.get_messages(request)
