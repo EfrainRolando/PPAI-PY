@@ -22,7 +22,7 @@ COOKIE_MAX_AGE = 60 * 60 * 8  # 8 horas
 
 # --- INSTANCIA ÚNICA (Como pediste) ---
 sesion = Sesion()
-gestor = GestorRevisionResultados(sesion)
+gestor = GestorRevisionResultados()
 
 # Usuarios de ejemplo (reemplazá por tu verificación real si quisieras)
 USUARIOS = {
@@ -89,52 +89,89 @@ def menu_principal_view(request: HttpRequest) -> HttpResponse:
     usuario = _get_user(request)
     return render(request, "redsismica/menu_principal.html", {"user": usuario})
 # --------------------
+#Logica de Primer parte
+@requiere_login
+def opcionRegistrarResultado(request: HttpRequest) -> HttpResponse:
+    return gestor.opcionRegistrarResultado(
+        lambda eventos: mostrarEventosSismicos(request, eventos)  # 👈 la Pantalla es quien muestra
+    )
+
+def mostrarEventosSismicos(request: HttpRequest, eventos: list[dict]) -> HttpResponse:
+    usuario = _get_user(request)
+    return render(request, "redsismica/eventos.html", {
+        "eventos": eventos,
+        "user": usuario,
+    })
 
 @requiere_login
-def eventos_view(request: HttpRequest) -> HttpResponse:
-    """Lista de eventos usando SOLO el Gestor (filtra y ordena)."""
+def tomarSeleccionEventoSismico(request: HttpRequest, evento_id: int) -> HttpResponse:
     usuario = _get_user(request)
 
-    # --- NUEVO: Limpia el evento seleccionado al volver al menú ---
-    gestor.limpiar_seleccion()
+    if request.method == "POST":
+        accion = request.POST.get("accion", "").strip().lower()
+        if accion == "rechazar":
+            gestor.validarDatosEventoSismico()
+            gestor.cambiarEstadoARechazado(usuario)
+            messages.success(request, "Evento rechazado exitosamente")
+            return redirect("eventos")
+        if accion == "aprobar":
+            gestor.cambiarEstadoAConfirmado(usuario)
+            messages.success(request, "Evento confirmado y aprobado.")
+            return redirect("eventos")
+        if accion == "solicitar":
+            gestor.cambiarEstadoADerivado(usuario)
+            messages.info(request, "Evento derivado a experto.")
+            return redirect("eventos")
+        if accion == "modificar":
+            return redirect("evento_modificar", evento_id=evento_id)
+        messages.error(request, "Acción no válida.")
+        return redirect("evento_detalle", evento_id=evento_id)
 
-    # 1) Filtra eventos a revisar (el dominio decide qué entra)
-    datos = gestor.buscarSismosARevisar()   # -> list[dict]
-    # 2) Ordena (también en el dominio)
-    datos = gestor.ordenarEventosPorFechaOcurrencia(datos)
-
-    # 3) Adaptación mínima de claves para el template (no es lógica de negocio)
-    eventos_vm = []
-    for d in datos:
-        eventos_vm.append({
-            "id": d.get("id_evento"),
-            "fecha": d.get("fechaHoraOcurrencia"),
-            "magnitud": d.get("magnitud"),
-            "epicentro": {"lat": d.get("latitudEpicentro"), "lon": d.get("longitudEpicentro")},
-            "hipocentro": {"lat": d.get("latitudHipocentro"), "lon": d.get("longitudHipocentro")},
-            "estado": d.get("estadoActual"),
-        })
-
-    return render(request, "redsismica/eventos.html", {"eventos": eventos_vm, "user": usuario})
+    # GET → pasamos DOS callbacks siguiendo tu secuencia
+    return gestor.tomarSeleccionEventoSismico(
+        evento_id,
+        # 3) “mostrar” detalle (paso lógico)
+        lambda detalles: None,  # si querés, podríamos hacer messages.info(...) acá
+        # 5) mostrar sismograma (render final que incluye detalle + sismograma)
+        lambda payload: mostrarDetalleEvento(request, payload),
+    )
 
 
+def mostrarDetalleEvento(request: HttpRequest, datos: dict) -> HttpResponse:
+    img = datos.get("sismograma_img_url") or "redsismica/sismografo.jpeg"
+    series = datos.get("series_por_estacion")
+    if not series:
+        ev = datos.get("evento")
+        try:
+            # Si 'evento' es un objeto de dominio con atributo 'seriesTemporales'
+            st_list = getattr(ev, "seriesTemporales", None)
+            if st_list:
+                series = [st.getDatos() for st in st_list]    # usa SerieTemporal.getDatos()
+        except Exception:
+            pass
 
+        # Si 'evento' ya viene como dict con seriesTemporales (dicts), las usamos igual
+        if not series and isinstance(ev, dict) and "seriesTemporales" in ev:
+            series = ev["seriesTemporales"]
+
+    # Si aún es None, que al menos sea lista
+    if series is None:
+        series = []
+
+    return render(request, "redsismica/evento_detalle.html", {
+        "evento": datos.get("evento", {}),
+        "sismograma_img_url": img,
+        "series_por_estacion": series,
+    })
+    
 @requiere_login
 def evento_modificar_view(request: HttpRequest, evento_id: int) -> HttpResponse:
     usuario = _get_user(request)
-    
-    # --- NUEVO: Selecciona el evento en el gestor ---
-    # Esto es necesario si el usuario recarga esta página
     if not gestor.eventoSeleccionado or gestor.eventoSeleccionado.id_evento != evento_id:
-        if not gestor.seleccionar_evento_por_id(evento_id):
+        if not gestor.tomarSeleccionEventoSismico(evento_id):
             messages.error(request, "Evento no encontrado o no disponible.")
             return redirect("eventos")
-
-    # --- REMOVIDO ---
-    # evento = gestor.tomarSeleccionEventoSismico(evento_id)
-
     if request.method == "POST":
-        # --- PASO 12 (Guardar): Capturar modificaciones ---
         magnitud = request.POST.get("magnitud")
         alcance_nombre = request.POST.get("alcance_nombre")
         alcance_desc = request.POST.get("alcance_desc")
@@ -151,7 +188,7 @@ def evento_modificar_view(request: HttpRequest, evento_id: int) -> HttpResponse:
                 "user": usuario,
                 "form_error": "Error: Magnitud, Alcance y Origen no pueden estar vacíos."
             })
-        
+
         # Si la validación es OK, actualizamos el objeto evento en memoria
         # --- MODIFICADO ---
         gestor.tomarModificaciones(
@@ -162,7 +199,7 @@ def evento_modificar_view(request: HttpRequest, evento_id: int) -> HttpResponse:
             nuevoOrigenNombre=origen_nombre,
             nuevoOrigenDescripcion=origen_detalle
         )
-        
+
         # Redirigimos DE VUELTA a la página de detalle
         messages.success(request, "Datos modificados correctamente.")
         # Usamos el evento_id del parámetro de la URL
@@ -175,61 +212,4 @@ def evento_modificar_view(request: HttpRequest, evento_id: int) -> HttpResponse:
         "evento": datos["evento"],
         "user": usuario,
         "form_error": None
-    })
-
-
-@requiere_login
-def evento_detalle_view(request: HttpRequest, evento_id: int) -> HttpResponse:
-    usuario = _get_user(request)
-    
-    # --- PASO 8: Bloquear evento (Se ejecuta al Cargar la vista GET) ---
-    
-    # --- NUEVO: Selecciona el evento en el gestor ---
-    if not gestor.tomarSeleccionEventoSismico(evento_id):
-        messages.error(request, "Evento no encontrado o no disponible.")
-        return redirect("eventos")
-    
-    if request.method == "GET":
-        # --- MODIFICADO ---
-        gestor.cambiarEstadoABloqueadoEnRevision(usuario) # Ya no pasamos evento_id
-
-    # -----------------------------------------------------------------
-    # --- PASOS 14, 15, 17: Se ejecutan en el POST ---
-    # -----------------------------------------------------------------
-    if request.method == "POST":
-        accion = request.POST.get("accion", "").strip().lower()
-
-        # --- PASO 15: AS Selecciona "Rechazar" ---
-        if accion == "rechazar":
-            # --- MODIFICADO ---
-            gestor.validarDatosEventoSismico() # Usa evento en memoria
-            gestor.cambiarEstadoARechazado(usuario) # Usa evento en memoria
-            messages.success(request, "Evento rechazado exitosamente")
-            return redirect("eventos")
-
-        # Flujo Alternativo A6: AS selecciona "Confirmar"
-        if accion == "aprobar":
-            # --- MODIFICADO ---
-            gestor.cambiarEstadoAConfirmado(usuario) # Usa evento en memoria
-            messages.success(request, "Evento confirmado y aprobado.")
-            return redirect("eventos")
-
-        # Flujo Alternativo A7: AS selecciona "Solicitar revisión"
-        if accion == "solicitar":
-            # --- MODIFICADO ---
-            gestor.cambiarEstadoADerivado(usuario) # Usa evento en memoria
-            messages.info(request, "Evento derivado a experto.")
-            return redirect("eventos")
-
-    # --- GET normal: traer datos y mostrar la pág. ---
-    # --- MODIFICADO ---
-    datos = gestor.buscarDatosEventoSismico() # Usa evento en memoria
-    
-    # Recogemos mensajes de éxito (ej. "Datos modificados correctamente")
-    page_messages = messages.get_messages(request)
-
-    return render(request, "redsismica/evento_detalle.html", {
-        "evento": datos["evento"],
-        "user": usuario,
-        "messages": page_messages, # Pasamos los mensajes a la plantilla
     })

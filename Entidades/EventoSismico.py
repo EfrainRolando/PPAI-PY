@@ -92,14 +92,11 @@ class EventoSismico:
             "estadoActual": self.getEstadoActual(),
         }
 
-    def bloquearEvento(self, estadoBloqueado, fechaHora, responsable):
-        for c in self.cambiosEstado:
-            if CambioEstado.esActual(c):
-                c.setFechaHoraFin(fechaHora)
-        self.crearCambioEstado(estadoBloqueado, fechaHora, responsable)
+    def bloquearEvento(self, estadoBloqueado) -> None:
+        self.crearCambioEstado(estadoBloqueado)
 
 
-    def crearCambioEstado(self, estado, fechaHora, nombreUsuario: Optional[str]) -> CambioEstado:
+    def crearCambioEstado(self, estado,fechaHora: Optional[datetime] = None, nombreUsuario: Optional[str] = None,) -> CambioEstado:
         cambio = CambioEstado(estado=estado, fechaHoraInicio=fechaHora, responsable=nombreUsuario)
         self.cambiosEstado.append(cambio)
         self.cambioEstadoActual = cambio
@@ -110,28 +107,47 @@ class EventoSismico:
         return cambio
 
     def getDatosEvento(self) -> dict:
-        def _d(obj, base): return obj.getDatos() if obj else base
-        def _round_coord(coord):
+        def _round_coord(coord: Optional[float]):
             return round(coord, 4) if coord is not None else None
-        # --- FIN NUEVA LÍNEA ---
+
+        def _as_array(obj, project=None):
+            if not obj:
+                return []
+            datos = obj.getDatos() if hasattr(obj, "getDatos") else {}
+            if callable(project):
+                datos = project(datos)
+            return [datos]
+        def _project_clasif(d: dict) -> dict:
+            return {
+            "nombre": d.get("nombre"),
+            "kmProfundidadDesde": d.get("kmProfundidadDesde"),
+            "kmProfundidadHasta": d.get("kmProfundidadHasta"),
+            }
 
         return {
-            "id_evento": self.id_evento,
-            "fechaHoraOcurrencia": self.fechaHoraOcurrencia,
-            "epicentro": {
-                "lat": _round_coord(self.latitudEpicentro), 
-                "lon": _round_coord(self.longitudEpicentro)
-            },
-            "hipocentro": {
-                "lat": _round_coord(self.latitudHipocentro), 
-                "lon": _round_coord(self.longitudHipocentro)
-            },
-            "magnitud": self.valorMagnitud,
-            "alcance": _d(self.alcance, {"nombre": "(sin datos)", "descripcion": ""}),
-            "clasificacion": _d(self.clasificacion, {"nombre": "(sin datos)", "escala": ""}),
-            "origen": _d(self.origenGeneracion, {"nombre": "(sin datos)", "detalle": ""}),
-            "estadoActual": self.getEstadoActual() or "(sin datos)",
-        }
+        "id_evento": self.id_evento,
+        "fechaHoraOcurrencia": self.fechaHoraOcurrencia,
+        "epicentro": {
+            "lat": _round_coord(getattr(self, "latitudEpicentro", None)),
+            "lon": _round_coord(getattr(self, "longitudEpicentro", None)),
+        },
+        "hipocentro": {
+            "lat": _round_coord(getattr(self, "latitudHipocentro", None)),
+            "lon": _round_coord(getattr(self, "longitudHipocentro", None)),
+        },
+        "magnitud": getattr(self, "valorMagnitud", None),
+
+        # 👉 Arrays para que la Pantalla itere
+        # Alcance y Origen: nombre + descripcion
+        "alcances": _as_array(getattr(self, "alcance", None)),  # usa alcance.getDatos()
+        "origenes": _as_array(getattr(self, "origenGeneracion", None)),  # usa origen.getDatos()
+
+        # Clasificación: nombre + kmProfundidadDesde/Hasta (proyección)
+        "clasificaciones": _as_array(getattr(self, "clasificacion", None), project=_project_clasif),
+
+        # Estado actual como string (o el dict que tu getEstadoActual retorne)
+        "estadoActual": self.getEstadoActual() or "(sin datos)",
+    }
 
     def getDatosSeriesTemporales(self) -> list[dict]:
         return [s.getDatos() for s in (self.seriesTemporales or [])]

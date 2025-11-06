@@ -1,83 +1,222 @@
 {% extends "base.html" %}
+{% load static %}
 {% block content %}
+
+  <!-- Encabezado -->
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h4">
+    <h1 class="h4 mb-0">
       <i class="bi bi-graph-up-arrow" style="color: var(--color-primario);"></i>
       Detalle del evento #{{ evento.id_evento }}
     </h1>
   </div>
 
-  {% for message in messages %}
-    {% if message.tags == 'success' %}
-      <div class="alert alert-success d-flex align-items-center" role="alert">
-        <i class="bi bi-check-circle-fill me-2"></i>
-        <div>{{ message }}</div>
-      </div>
-    {% else %}
-      <div class="alert alert-{{ message.tags|default:'info' }}">{{ message }}</div>
-    {% endif %}
-  {% endfor %}
-
-<div class="card mb-3"> <div class="card-body">
+  <!-- Card: Resumen -->
+  <div class="card shadow-sm mb-3">
+    <div class="card-body">
       <div class="row g-3">
         <div class="col-md-4">
           <div><strong>Fecha:</strong> {{ evento.fechaHoraOcurrencia }}</div>
           <div><strong>Magnitud:</strong> {{ evento.magnitud }}</div>
-          <div><strong>Estado actual:</strong> <span class="badge text-bg-light">{{ evento.estadoActual }}</span></div>
+          <div>
+            <strong>Estado actual:</strong>
+            <span class="badge text-bg-light">{{ evento.estadoActual }}</span>
+          </div>
         </div>
         <div class="col-md-4">
           <div><strong>Epicentro:</strong> lat {{ evento.epicentro.lat }}, lon {{ evento.epicentro.lon }}</div>
           <div><strong>Hipocentro:</strong> lat {{ evento.hipocentro.lat }}, lon {{ evento.hipocentro.lon }}</div>
         </div>
       </div>
+    </div>
+  </div>
 
-      <hr class="my-4" style="border-top: 1px solid #4a5058;">
-      
+  <!-- Card: Datos Sísmicos (alcance / clasificación / origen) -->
+  <div class="card shadow-sm mb-3">
+    <div class="card-body">
       <h2 class="h5 mb-3">Datos Sísmicos Registrados</h2>
+
+      {% with a=evento.alcances|first c=evento.clasificaciones|first o=evento.origenes|first %}
       <div class="row g-3">
         <div class="col-md-4">
-          <h5>Alcance</h5>
-          <div><strong>Nombre:</strong> {{ evento.alcance.nombre }}</div>
-          <div class="text-muted"><small>{{ evento.alcance.descripcion }}</small></div>
+          <h5 class="mb-2">Alcance</h5>
+          <div><strong>Nombre:</strong> {{ a.nombre|default:"(sin datos)" }}</div>
+          <div class="text-muted"><small>{{ a.descripcion|default:"" }}</small></div>
         </div>
         <div class="col-md-4">
-          <h5>Clasificación</h5>
-          <div><strong>Nombre:</strong> {{ evento.clasificacion.nombre }}</div>
+          <h5 class="mb-2">Clasificación</h5>
+          <div><strong>Nombre:</strong> {{ c.nombre|default:"(sin datos)" }}</div>
+          {% if c.kmProfundidadDesde or c.kmProfundidadHasta %}
+            <div class="text-muted">
+              <small>Prof.: {{ c.kmProfundidadDesde|default:"—" }}–{{ c.kmProfundidadHasta|default:"—" }} km</small>
+            </div>
+          {% endif %}
         </div>
         <div class="col-md-4">
-          <h5>Origen de Generación</h5>
-          <div><strong>Nombre:</strong> {{ evento.origen.nombre }}</div>
-          <div class="text-muted"><small>{{ evento.origen.detalle }}</small></div>
+          <h5 class="mb-2">Origen de Generación</h5>
+          <div><strong>Nombre:</strong> {{ o.nombre|default:"(sin datos)" }}</div>
+          <div class="text-muted"><small>{{ o.descripcion }}</small></div>
         </div>
       </div>
+      {% endwith %}
+    </div>
+  </div>
 
-      <form method="post" class="mt-4">
+  <!-- Sismograma + Series/Muestras/Detalles -->
+  {% if sismograma_img_url or series_por_estacion %}
+  <div class="row g-4 align-items-start mb-3">
+
+    {% if sismograma_img_url %}
+    <div class="col-lg-5">
+      <div class="card shadow-sm h-100">
+        <div class="card-header d-flex align-items-center">
+          <i class="bi bi-activity me-2"></i> Sismograma
+        </div>
+        <div class="card-body text-center">
+          <img src="{% static sismograma_img_url %}" alt="Sismógrafo" class="img-fluid rounded">
+          <div class="text-muted mt-2"><small>Imagen ilustrativa</small></div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if series_por_estacion %}
+    <div class="col-lg-7">
+      <div class="card shadow-sm h-100">
+        <div class="card-header d-flex align-items-center justify-content-between">
+          <span><i class="bi bi-diagram-3 me-2"></i> Series temporales por estación</span>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0 align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th>Código Estación</th>
+                  <th>Desde</th>
+                  <th>Hasta</th>
+                  <th>Frecuencia (Hz)</th>
+                  <th>Condición Marea</th>
+                  <th class="text-end">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for s in series_por_estacion %}
+                <tr>
+                  <td class="fw-semibold">{{ s.CodigoEstacion|default:"—" }}</td>
+                  <td>{% if s.desde %}{{ s.desde|date:"Y-m-d H:i" }}{% else %}—{% endif %}</td>
+                  <td>{% if s.hasta %}{{ s.hasta|date:"Y-m-d H:i" }}{% else %}—{% endif %}</td>
+                  <td>{{ s.frecuencia|floatformat:1|default:"—" }}</td>
+                  <td>{{ s.condicionMarea|default:"—" }}</td>
+                  <td class="text-end">
+                    <button
+                      class="btn btn-outline-primary btn-sm"
+                      type="button"
+                      data-bs-toggle="collapse"
+                      data-bs-target="#series-{{ forloop.counter }}"
+                      aria-expanded="false"
+                      aria-controls="series-{{ forloop.counter }}"
+                    >Ver muestras</button>
+                  </td>
+                </tr>
+
+                <tr class="bg-body-tertiary">
+                  <td colspan="6" class="p-0">
+                    <div id="series-{{ forloop.counter }}" class="collapse">
+                      <div class="p-3">
+                        {% if s.muestras and s.muestras|length > 0 %}
+                        <div class="accordion" id="acc-series-{{ forloop.counter }}">
+                          {% for m in s.muestras %}
+                          <div class="accordion-item">
+                            <h2 class="accordion-header" id="mh-{{ forloop.parentloop.counter }}-{{ forloop.counter }}">
+                              <button class="accordion-button collapsed" type="button"
+                                      data-bs-toggle="collapse"
+                                      data-bs-target="#mc-{{ forloop.parentloop.counter }}-{{ forloop.counter }}"
+                                      aria-expanded="false"
+                                      aria-controls="mc-{{ forloop.parentloop.counter }}-{{ forloop.counter }}">
+                                Muestra {{ forloop.counter }} — {{ m.fechaHoraMuestra|default:"(sin fecha)" }}
+                              </button>
+                            </h2>
+                            <div id="mc-{{ forloop.parentloop.counter }}-{{ forloop.counter }}"
+                                 class="accordion-collapse collapse"
+                                 aria-labelledby="mh-{{ forloop.parentloop.counter }}-{{ forloop.counter }}"
+                                 data-bs-parent="#acc-series-{{ forloop.parentloop.counter }}">
+                              <div class="accordion-body">
+                                {% if m.detalles and m.detalles|length > 0 %}
+                                <div class="table-responsive">
+                                  <table class="table table-sm align-middle">
+                                    <thead>
+                                      <tr>
+                                        <th>Valor</th>
+                                        <th>Tipo (denominación)</th>
+                                        <th>Unidad</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {% for d in m.detalles %}
+                                      <tr>
+                                        <td>{{ d.valor|default:"—" }}</td>
+                                        <td>{{ d.tipoDeDato.denominacion|default:"—" }}</td>
+                                        <td>{{ d.tipoDeDato.nombreUnidadDeMedida|default:"—" }}</td>
+                                      </tr>
+                                      {% endfor %}
+                                    </tbody>
+                                  </table>
+                                </div>
+                                {% else %}
+                                <div class="text-muted">La muestra no tiene detalles.</div>
+                                {% endif %}
+                              </div>
+                            </div>
+                          </div>
+                          {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="text-muted">Esta serie no tiene muestras.</div>
+                        {% endif %}
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="6" class="text-center text-muted p-3">No hay series registradas.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+  {% endif %}
+
+  <!-- Acciones -->
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <form method="post" class="mt-2">
         {% csrf_token %}
-        <div class="d-flex justify-content-between mt-4 align-items-center">
-          
-          <div>
-            <button type="button" class="btn btn-primary me-2" disabled>
-              <i class="bi bi-image-alt"></i> Generar Sismograma
-            </button>
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+          <div class="d-flex gap-2">
             <a href="{% url 'evento_modificar' evento.id_evento %}" class="btn btn-warning">
               <i class="bi bi-pencil-fill"></i> Modificar Datos
             </a>
           </div>
-          
-          <div class="text-end">
-            <button type="submit" name="accion" value="solicitar" class="btn btn-secondary me-2">
+          <div class="d-flex gap-2">
+            <button type="submit" name="accion" value="solicitar" class="btn btn-secondary">
               <i class="bi bi-person-video3"></i> Solicitar Revisión
             </button>
-            <button type="submit" name="accion" value="aprobar" class="btn btn-success me-2">
+            <button type="submit" name="accion" value="aprobar" class="btn btn-success">
               <i class="bi bi-check-circle-fill"></i> Confirmar
             </button>
             <button type="submit" name="accion" value="rechazar" class="btn btn-danger">
               <i class="bi bi-x-circle-fill"></i> Rechazar
             </button>
           </div>
-
         </div>
       </form>
     </div>
   </div>
+
 {% endblock %}
