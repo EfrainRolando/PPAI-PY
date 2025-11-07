@@ -193,30 +193,33 @@
   {% endif %}
 
   <!-- Acciones -->
-  <div class="card shadow-sm">
-    <div class="card-body">
-      <form method="post" class="mt-2">
-        {% csrf_token %}
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-          <div class="d-flex gap-2">
-            <a href="{% url 'evento_modificar' evento.id_evento %}" class="btn btn-warning">
-              <i class="bi bi-pencil-fill"></i> Modificar Datos
-            </a>
-          </div>
-          <div class="d-flex gap-2">
-            <button type="submit" name="accion" value="solicitar" class="btn btn-secondary">
-              <i class="bi bi-person-video3"></i> Solicitar Revisión
-            </button>
-            <button type="submit" name="accion" value="aprobar" class="btn btn-success">
-              <i class="bi bi-check-circle-fill"></i> Confirmar
-            </button>
-            <button type="submit" name="accion" value="rechazar" class="btn btn-danger">
-              <i class="bi bi-x-circle-fill"></i> Rechazar
-            </button>
-          </div>
+<div class="card shadow-sm">
+  <div class="card-body">
+    <form method="post" class="mt-2">
+      {% csrf_token %}
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div class="d-flex gap-2">
+          <a href="{% url 'tomar_modificaciones' evento.id_evento %}" class="btn btn-warning">
+            <i class="bi bi-pencil-fill"></i> Modificar Datos
+          </a>
+<a href="{% url 'opcion_mapa' %}" class="btn btn-info">
+  <i class="bi bi-geo-alt-fill"></i> Visualizar en mapa
+</a>
         </div>
-      </form>
-    </div>
+        <div class="d-flex gap-2">
+          <button type="submit" name="accion" value="solicitar" class="btn btn-secondary">
+            <i class="bi bi-person-video3"></i> Solicitar Revisión
+          </button>
+          <button type="submit" name="accion" value="aprobar" class="btn btn-success">
+            <i class="bi bi-check-circle-fill"></i> Confirmar
+          </button>
+          <button type="submit" name="accion" value="rechazar" class="btn btn-danger">
+            <i class="bi bi-x-circle-fill"></i> Rechazar
+          </button>
+        </div>
+      </div>
+    </form>
   </div>
+</div>
 
 {% endblock %}

@@ -130,9 +130,7 @@ def tomarSeleccionEventoSismico(request: HttpRequest, evento_id: int) -> HttpRes
     # GET → pasamos DOS callbacks siguiendo tu secuencia
     return gestor.tomarSeleccionEventoSismico(
         evento_id,
-        # 3) “mostrar” detalle (paso lógico)
-        lambda detalles: None,  # si querés, podríamos hacer messages.info(...) acá
-        # 5) mostrar sismograma (render final que incluye detalle + sismograma)
+        lambda datos: mostrarDetalleEvento(request, datos),
         lambda payload: mostrarDetalleEvento(request, payload),
     )
 
@@ -165,12 +163,8 @@ def mostrarDetalleEvento(request: HttpRequest, datos: dict) -> HttpResponse:
     })
     
 @requiere_login
-def evento_modificar_view(request: HttpRequest, evento_id: int) -> HttpResponse:
+def tomar_modificaciones(request: HttpRequest, evento_id: int) -> HttpResponse:
     usuario = _get_user(request)
-    if not gestor.eventoSeleccionado or gestor.eventoSeleccionado.id_evento != evento_id:
-        if not gestor.tomarSeleccionEventoSismico(evento_id):
-            messages.error(request, "Evento no encontrado o no disponible.")
-            return redirect("eventos")
     if request.method == "POST":
         magnitud = request.POST.get("magnitud")
         alcance_nombre = request.POST.get("alcance_nombre")
@@ -178,38 +172,41 @@ def evento_modificar_view(request: HttpRequest, evento_id: int) -> HttpResponse:
         origen_nombre = request.POST.get("origen_nombre")
         origen_detalle = request.POST.get("origen_detalle")
 
-        # --- PASO 16: Validación (simple) ---
         if not magnitud or not alcance_nombre or not origen_nombre:
-            # Si hay error, volvemos a mostrar el formulario con un mensaje
-            # --- MODIFICADO ---
-            datos = gestor.buscarDatosEventoSismico() # Usa el evento en memoria
+            datos = gestor.buscarDatosEventoSismico()
             return render(request, "redsismica/evento_modificar.html", {
                 "evento": datos["evento"],
                 "user": usuario,
                 "form_error": "Error: Magnitud, Alcance y Origen no pueden estar vacíos."
             })
 
-        # Si la validación es OK, actualizamos el objeto evento en memoria
-        # --- MODIFICADO ---
         gestor.tomarModificaciones(
-            # evento=evento, <-- Argumento removido
             nuevoMagnitud=float(magnitud),
             nuevoAlcanceNombre=alcance_nombre,
             nuevoAlcanceDescripcion=alcance_desc,
             nuevoOrigenNombre=origen_nombre,
             nuevoOrigenDescripcion=origen_detalle
         )
-
-        # Redirigimos DE VUELTA a la página de detalle
         messages.success(request, "Datos modificados correctamente.")
-        # Usamos el evento_id del parámetro de la URL
         return redirect('evento_detalle', evento_id=evento_id)
 
-    # --- GET (Mostrar el formulario por primera vez) ---
-    # --- MODIFICADO ---
-    datos = gestor.buscarDatosEventoSismico() # Usa el evento en memoria
+    datos = gestor.buscarDatosEventoSismico()
     return render(request, "redsismica/evento_modificar.html", {
         "evento": datos["evento"],
         "user": usuario,
         "form_error": None
     })
+
+
+# ====== NUEVO: Opción mapa ======
+
+@requiere_login
+def tomarSeleccionOpcionMapa(request) -> HttpResponse:
+    usuario = _get_user(request)
+    return gestor.tomarSeleccionOpcionMapa(
+        lambda datos: render(request, "redsismica/opcion_mapa.html", {
+            "evento": datos.get("evento", {}),
+            "mapa_img_url": datos.get("mapa_img_url", "redsismica/sismo-mapa.jpg"),
+            "user": usuario,
+        })
+    )

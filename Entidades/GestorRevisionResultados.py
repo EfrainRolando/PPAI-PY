@@ -82,12 +82,19 @@ class GestorRevisionResultados:
     
 
     def habilitarOpcionMapa(self) -> bool:
-        pass
+        return self.eventoSeleccionado is not None
 
+    def tomarSeleccionOpcionMapa(self, mostrarMapa_cb: Callable[[Dict[str, Any]] , "HttpResponse"]) -> "HttpResponse":
+        if not self.eventoSeleccionado:
+            payload = {"evento": {},"mapa_img_url": "redsismica/sismo-mapa.jpg",  # <-- TU ARCHIVO EN static
+                       }
+            return mostrarMapa_cb(payload)
 
-    def tomarSeleccionMapa(self, Opcion: bool) -> None:
-        return  Opcion
-    
+        detalles_evento = self.eventoSeleccionado.getDatosEvento()
+        payload = {"evento": detalles_evento,
+                    "mapa_img_url": "redsismica/sismo-mapa.jpg",
+                    }
+        return mostrarMapa_cb(payload)
 
     def habilitarModificaciones(self):
         if not self.eventoSeleccionado:
