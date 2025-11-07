@@ -1,17 +1,10 @@
-import hashlib
-from dataclasses import dataclass
-
-
 class Usuario:
-    def __init__(self, username: str, nombre_mostrar: str, password_plana: str) -> None:
+    def __init__(self, username: str, nombre_mostrar: str | None = None) -> None:
         self.username = username
-        self.nombre_mostrar = nombre_mostrar
-        self.password_plana = password_plana  # hoy aceptás
+        self.nombre_mostrar = nombre_mostrar or username.capitalize()
 
-    @staticmethod
-    def hash_password(clave_plana: str) -> str:
-        return hashlib.sha256(clave_plana.encode("utf-8")).hexdigest()
-
-    def getUsuarioLogueado(self: "Usuario") -> str:
-        # Devuelve el nombre a mostrar (podés cambiar a return usuario si querés el objeto)
+    def getUsuarioLogueado(self) -> str:
+        """
+        Nombre a mostrar en la UI.
+        """
         return self.nombre_mostrar

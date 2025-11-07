@@ -9,9 +9,9 @@ from apps.redsismica.repositorio import RepositorioEventosDjango
 
 
 class GestorRevisionResultados:
-    def __init__(self):
+    def __init__(self, sesion):
         
-        self.sesion = Sesion()
+        self.sesion = sesion
         self.repo = RepositorioEventosDjango()
         self.eventoSeleccionado: Optional[EventoSismico] = None
         self.eventos: List[EventoSismico] = self.repo.obtener_eventos()
@@ -73,7 +73,7 @@ class GestorRevisionResultados:
         return {"evento": datos_evento}
     
     # Metodos propios del gestor
-    def getFechaYHoraActual(self) -> datetime:
+    def getFechaHoraActual(self) -> datetime:
             return datetime.now()
     
 
@@ -121,9 +121,31 @@ class GestorRevisionResultados:
         }
     
 
-    def validarSeleccionAccion(self, Accion: int) -> None:
-        if Accion < 0 or Accion > 4:
-            print("Accion No valida!")
+    def tomarOpcionAccion(self, evento_id: int, accion: str) -> bool:
+        a = (accion or "").strip().lower()
+
+    # Asegurar que el evento seleccionado sea el pedido
+        if (not self.eventoSeleccionado) or (self.eventoSeleccionado.id_evento != evento_id):
+            self.eventoSeleccionado = next((e for e in self.eventos if e.id_evento == evento_id), None)
+
+        if not self.eventoSeleccionado:
+            return False
+
+        if a == "rechazar":
+            self.validarDatosEventoSismico()
+            self.cambiarEstadoARechazado()
+            return True
+
+        if a in ("confirmar", "aprobar"):
+            self.cambiarEstadoAConfirmado()
+            return True
+
+        if a in ("derivar", "solicitar"):
+            self.cambiarEstadoADerivado()
+            return True
+
+        return False
+
 
     def validarDatosEventoSismico(self) -> None:
         # Ya no recibe evento_id, usa self.eventoSeleccionado
@@ -134,25 +156,28 @@ class GestorRevisionResultados:
 
 
     def buscarUsuario(self) -> str:
+        if self.sesion is None or self.sesion.getUsuario() is None:
+            return "Desconocido"
         return self.sesion.getUsuario()
 
     #Logica de cambio de estados
 
     def cambiarEstadoABloqueadoEnRevision(self) -> None:
-        estadoBloqueado = self.buscarEstadoBloqueadoEnRevision()
-        if estadoBloqueado:
-            self.eventoSeleccionado.bloquearEvento(estadoBloqueado)
+        fechaHoraActual = self.getFechaHoraActual()
+        self.eventoSeleccionado.bloquear(fechaHoraActual, self.eventoSeleccionado)
 
     
-    def buscarEstadoBloqueadoEnRevision(self) -> Estado:
-        for n in Estado.NOMBRES_POSIBLES:
-            if n == "BloqueadoEnRevision":
-                return Estado(n)
+    #def buscarEstadoBloqueadoEnRevision(self) -> Estado:
+     #   for n in Estado.NOMBRES_POSIBLES:
+      #      if n == "BloqueadoEnRevision   ":
+       #         return Estado(n)
             
 
-    def cambiarEstadoARechazado(self, responsable : str) -> None:
+    def cambiarEstadoARechazado(self) -> None:
         EstadoRechazado = self.buscarEstadoRechazado()
-        fechaHoraActual = self.getFechaYHoraActual()
+        fechaHoraActual = self.getFechaHoraActual()
+        responsable = self.buscarUsuario()
+        print(responsable)
         if EstadoRechazado:
             self.eventoSeleccionado.rechazarEvento(EstadoRechazado, fechaHoraActual, responsable)
 
@@ -163,9 +188,10 @@ class GestorRevisionResultados:
                 return Estado(n)
             
             
-    def cambiarEstadoAConfirmado(self, responsable) -> None:
+    def cambiarEstadoAConfirmado(self) -> None:
         estado = self.buscarConfirmado()
-        fechaHoraActual = self.getFechaYHoraActual()
+        fechaHoraActual = self.getFechaHoraActual()
+        responsable = self.buscarUsuario()
         if estado:
             self.eventoSeleccionado.confirmar(estado, fechaHoraActual, responsable)
 
@@ -176,9 +202,10 @@ class GestorRevisionResultados:
                 return Estado(n)
             
             
-    def cambiarEstadoADerivado(self, responsable) -> None:
+    def cambiarEstadoADerivado(self) -> None:
         estado = self.buscarDerivado()
-        fechaHoraActual = self.getFechaYHoraActual()
+        fechaHoraActual = self.getFechaHoraActual()
+        responsable = self.buscarUsuario()
         if estado:
             self.eventoSeleccionado.derivar(estado, fechaHoraActual, responsable)
 

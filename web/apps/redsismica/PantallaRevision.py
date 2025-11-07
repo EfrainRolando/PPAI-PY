@@ -22,7 +22,7 @@ COOKIE_MAX_AGE = 60 * 60 * 8  # 8 horas
 
 # --- INSTANCIA ÚNICA (Como pediste) ---
 sesion = Sesion()
-gestor = GestorRevisionResultados()
+gestor = GestorRevisionResultados(sesion)
 
 # Usuarios de ejemplo (reemplazá por tu verificación real si quisieras)
 USUARIOS = {
@@ -46,6 +46,25 @@ def _get_user(request: HttpRequest) -> str | None:
         return data.get("u")
     except signing.BadSignature:
         return None
+def login_view(request: HttpRequest) -> HttpResponse:
+    if request.method == "POST":
+        form = LoginForm(request.POST)
+        if form.is_valid():
+            u = form.cleaned_data["username"]
+            p = form.cleaned_data["password"]
+            if USUARIOS.get(u) == p:
+                # ✅ Seteamos la sesión real del Gestor
+                sesion.iniciarSesion(u, p)
+                gestor.sesion = sesion  # el gestor usa esta sesión
+
+                resp = redirect("menu_principal")
+                _set_auth_cookie(resp, u)
+                return resp
+            else:
+                form.add_error(None, "Usuario o contraseña inválidos")
+    else:
+        form = LoginForm()
+    return render(request, "redsismica/login.html", {"form": form})
 
 
 def requiere_login(view_func):
@@ -62,32 +81,18 @@ def home_view(request: HttpRequest) -> HttpResponse:
         return redirect("menu_principal")
     return redirect("login")
 
-def login_view(request: HttpRequest) -> HttpResponse:
-    if request.method == "POST":
-        form = LoginForm(request.POST)
-        if form.is_valid():
-            u = form.cleaned_data["username"]
-            p = form.cleaned_data["password"]
-            if USUARIOS.get(u) == p:
-                resp = redirect("menu_principal")
-                _set_auth_cookie(resp, u)
-                return resp
-            else:
-                form.add_error(None, "Usuario o contraseña inválidos")
-    else:
-        form = LoginForm()
-    return render(request, "redsismica/login.html", {"form": form})
 
 def logout_view(request: HttpRequest) -> HttpResponse:
     resp = redirect("login")
     _clear_auth_cookie(resp)
+    sesion.cerrarSesion()
+    gestor.sesion = sesion
     return resp
 
 @requiere_login
 def menu_principal_view(request: HttpRequest) -> HttpResponse:
-    """Muestra la 'carátula' o menú principal."""
-    usuario = _get_user(request)
-    return render(request, "redsismica/menu_principal.html", {"user": usuario})
+    user = gestor.buscarUsuario()
+    return render(request, "redsismica/menu_principal.html", {"user": user})
 # --------------------
 #Logica de Primer parte
 @requiere_login
@@ -97,42 +102,58 @@ def opcionRegistrarResultado(request: HttpRequest) -> HttpResponse:
     )
 
 def mostrarEventosSismicos(request: HttpRequest, eventos: list[dict]) -> HttpResponse:
-    usuario = _get_user(request)
+    user = gestor.buscarUsuario()  # ← usar la sesión de dominio
     return render(request, "redsismica/eventos.html", {
         "eventos": eventos,
-        "user": usuario,
+        "user": user,
     })
 
 @requiere_login
 def tomarSeleccionEventoSismico(request: HttpRequest, evento_id: int) -> HttpResponse:
-    usuario = _get_user(request)
-
+    # Esta view SOLO muestra (GET). Si llega un POST por error, redirige a acciones.
     if request.method == "POST":
-        accion = request.POST.get("accion", "").strip().lower()
-        if accion == "rechazar":
-            gestor.validarDatosEventoSismico()
-            gestor.cambiarEstadoARechazado(usuario)
-            messages.success(request, "Evento rechazado exitosamente")
-            return redirect("eventos")
-        if accion == "aprobar":
-            gestor.cambiarEstadoAConfirmado(usuario)
-            messages.success(request, "Evento confirmado y aprobado.")
-            return redirect("eventos")
-        if accion == "solicitar":
-            gestor.cambiarEstadoADerivado(usuario)
-            messages.info(request, "Evento derivado a experto.")
-            return redirect("eventos")
-        if accion == "modificar":
-            return redirect("evento_modificar", evento_id=evento_id)
-        messages.error(request, "Acción no válida.")
-        return redirect("evento_detalle", evento_id=evento_id)
+        return redirect("evento_accion", evento_id=evento_id)
 
-    # GET → pasamos DOS callbacks siguiendo tu secuencia
+    # GET → pasamos dos callbacks siguiendo tu secuencia
     return gestor.tomarSeleccionEventoSismico(
         evento_id,
         lambda datos: mostrarDetalleEvento(request, datos),
         lambda payload: mostrarDetalleEvento(request, payload),
     )
+
+
+@requiere_login
+def tomarOpcionAccion(request: HttpRequest, evento_id: int) -> HttpResponse:
+    if request.method != "POST":
+        return redirect("eventos")
+
+    accion = (request.POST.get("accion") or "").strip().lower()
+
+    # Aseguramos que el gestor tenga seleccionado el evento
+    gestor.tomarSeleccionEventoSismico(
+        evento_id,
+        lambda _datos: None,   # no mostramos nada acá
+        lambda _payload: None  # no mostramos nada acá
+    )
+
+    # Ejecutamos la acción en el gestor
+    ejecutada = gestor.tomarOpcionAccion(evento_id, accion)
+
+    if accion == "modificar":
+        return redirect("evento_modificar", evento_id=evento_id)
+
+    if not ejecutada:
+        messages.error(request, "No se pudo ejecutar la acción o el evento no existe.")
+        return redirect("evento_detalle", evento_id=evento_id)
+
+    if accion == "rechazar":
+        messages.success(request, "Evento rechazado exitosamente.")
+    elif accion in ("confirmar", "aprobar"):
+        messages.success(request, "Evento confirmado y aprobado.")
+    elif accion in ("derivar", "solicitar"):
+        messages.info(request, "Evento derivado a experto.")
+
+    return redirect("eventos")
 
 
 def mostrarDetalleEvento(request: HttpRequest, datos: dict) -> HttpResponse:
@@ -196,10 +217,6 @@ def tomar_modificaciones(request: HttpRequest, evento_id: int) -> HttpResponse:
         "user": usuario,
         "form_error": None
     })
-
-
-# ====== NUEVO: Opción mapa ======
-
 @requiere_login
 def tomarSeleccionOpcionMapa(request) -> HttpResponse:
     usuario = _get_user(request)

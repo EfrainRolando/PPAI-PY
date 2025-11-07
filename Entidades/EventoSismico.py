@@ -7,6 +7,7 @@ from Entidades.SerieTemporal import SerieTemporal
 from Entidades.AlcanceSismo import AlcanceSismo
 from Entidades.ClasificacionSismo import ClasificacionSismo
 from Entidades.OrigenGeneracion import OrigenDeGeneracion
+from Entidades.EstadoEvento import PteRevision
 
 
 class EventoSismico:
@@ -92,8 +93,8 @@ class EventoSismico:
             "estadoActual": self.getEstadoActual(),
         }
 
-    def bloquearEvento(self, estadoBloqueado) -> None:
-        self.crearCambioEstado(estadoBloqueado)
+    def bloquear(self, fechaHora: datetime, eventoSeleccionado: EventoSismico, resp =Optional[str]) -> None:
+        PteRevision().bloquear(self, fechaHora, resp)
 
 
     def crearCambioEstado(self, estado,fechaHora: Optional[datetime] = None, nombreUsuario: Optional[str] = None,) -> CambioEstado:
@@ -180,3 +181,12 @@ class EventoSismico:
             if CambioEstado.esActual(c):
                 c.setFechaHoraFin(fechaHora)
         self.crearCambioEstado(estado, fechaHora, responsable)
+
+    def setCambioEstado(self, cambio: CambioEstado) -> None:
+        self.cambiosEstado.append(cambio)
+        self.cambioEstadoActual = cambio
+        return None
+
+    def setEstadoActual(self, estado: Estado) -> None:
+        self.estadoActual = estado
+        return None
