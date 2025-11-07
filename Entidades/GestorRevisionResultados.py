@@ -164,28 +164,13 @@ class GestorRevisionResultados:
 
     def cambiarEstadoABloqueadoEnRevision(self) -> None:
         fechaHoraActual = self.getFechaHoraActual()
-        self.eventoSeleccionado.bloquear(fechaHoraActual, self.eventoSeleccionado)
-
-    
-    #def buscarEstadoBloqueadoEnRevision(self) -> Estado:
-     #   for n in Estado.NOMBRES_POSIBLES:
-      #      if n == "BloqueadoEnRevision   ":
-       #         return Estado(n)
+        self.eventoSeleccionado.bloquear(fechaHoraActual)
             
 
     def cambiarEstadoARechazado(self) -> None:
-        EstadoRechazado = self.buscarEstadoRechazado()
         fechaHoraActual = self.getFechaHoraActual()
         responsable = self.buscarUsuario()
-        print(responsable)
-        if EstadoRechazado:
-            self.eventoSeleccionado.rechazarEvento(EstadoRechazado, fechaHoraActual, responsable)
-
-                
-    def buscarEstadoRechazado(self) -> Estado:
-        for n in Estado.NOMBRES_POSIBLES:
-            if n == "Rechazado":
-                return Estado(n)
+        self.eventoSeleccionado.rechazar(fechaHoraActual, responsable)
             
             
     def cambiarEstadoAConfirmado(self) -> None:
@@ -226,23 +211,18 @@ class GestorRevisionResultados:
         mostrarDetalleEvento_cb: Callable[[Dict[str, Any]], None],
         mostrarSismograma_cb: Callable[[Dict[str, Any]], "HttpResponse"],
     ) -> "HttpResponse":
-    # Buscar y fijar el evento seleccionado
         self.eventoSeleccionado = None
         for e in self.eventos:
             if eleccion == e.id_evento:
                 self.eventoSeleccionado = e
                 break
-
-    # Si no existe, devolvemos algo neutro y consistente (sin variables no definidas)
         if not self.eventoSeleccionado:
             payload = {
                 "evento": {},
-                "sismograma_img_url": "redsismica/sismografo.jpeg",  # <- sin /static y con .jpeg
+                "sismograma_img_url": "redsismica/sismografo.jpeg", 
                 "series_por_estacion": [],
             }
             return self.llamarCUGenerarSismograma(payload, mostrarSismograma_cb)
-
-    # Si existe, seguimos el flujo normal
         self.cambiarEstadoABloqueadoEnRevision()
         detalles_evento = self.eventoSeleccionado.getDatosEvento()
         mostrarDetalleEvento_cb({"evento": detalles_evento})
@@ -252,7 +232,7 @@ class GestorRevisionResultados:
 
         payload = {
             "evento": detalles_evento,
-            "sismograma_img_url": "redsismica/sismografo.jpeg",  # <- sin /static y con .jpeg
+            "sismograma_img_url": "redsismica/sismografo.jpeg", 
             "series_por_estacion": series_ordenadas,
         }
         return self.llamarCUGenerarSismograma(payload, mostrarSismograma_cb)
@@ -267,4 +247,72 @@ class GestorRevisionResultados:
 
      
     def finCU(self):
-         pass
+
+        responsable = self.buscarUsuario() if hasattr(self, 'buscarUsuario') else 'sistema'
+
+    # 1) ¿qué eventos persistimos?
+        if getattr(self, 'eventoSeleccionado', None) is not None:
+            eventos = [self.eventoSeleccionado]
+        elif hasattr(self, 'eventos'):
+            eventos = list(self.eventos)
+        else:
+            eventos = []
+        def _estado_final_mem(e) -> Optional[str]:
+
+            try:
+                if getattr(e, "cambiosEstado", None):
+                    ult = e.cambiosEstado[-1]
+                # Puede ser entidad Estado o un State concreto
+                    nombre = getattr(ult.estado, "nombre", None)
+                    if not nombre:
+                    # Si es una clase State concreta, usamos el nombre de clase
+                        nombre = ult.estado.__class__.__name__
+                    return nombre
+            except Exception:
+                pass
+        # fallback al método actual
+            try:
+                return e.getEstadoActual()
+            except Exception:
+                return None
+
+    # 3) normalizador simple por si viniera un nombre de clase State
+        NORMALIZA = {
+            "PteRevision": "PteRevision",
+            "BloqueadoEnRevision": "BloqueadoEnRevision",
+            "Rechazado": "Rechazado",
+            "Confirmado": "Confirmado",
+            "Derivado": "Derivado",
+        # Por si los estados concretos son clases con estos nombres:
+            "PteRevisionState": "PteRevision",
+            "BloqueadoEnRevisionState": "BloqueadoEnRevision",
+            "RechazadoState": "Rechazado",
+            "ConfirmadoState": "Confirmado",
+            "DerivadoState": "Derivado",
+    }
+
+    # 4) persistimos solo si difiere de DB (idempotente)
+        for e in eventos:
+            if not hasattr(e, "id_evento") or e.id_evento is None:
+                continue
+
+            estado_final = _estado_final_mem(e)
+            if not estado_final:
+                continue
+
+            estado_final = NORMALIZA.get(estado_final, estado_final)
+
+            try:
+                estado_db = self.repo.get_estado_actual(e.id_evento)
+            except Exception:
+                estado_db = None
+
+        # Si es igual, no escribimos; si difiere, persistimos
+            if estado_db != estado_final:
+                try:
+                    self.repo.cambiar_estado(e.id_evento, estado_final, responsable)
+                except Exception:
+                # no frenamos toda la CU por un error puntual
+                    continue
+
+        return True

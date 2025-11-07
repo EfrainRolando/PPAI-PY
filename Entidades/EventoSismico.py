@@ -7,7 +7,7 @@ from Entidades.SerieTemporal import SerieTemporal
 from Entidades.AlcanceSismo import AlcanceSismo
 from Entidades.ClasificacionSismo import ClasificacionSismo
 from Entidades.OrigenGeneracion import OrigenDeGeneracion
-from Entidades.EstadoEvento import PteRevision
+from Entidades.EstadoEvento import EstadoEvento, PteRevision, BloqueadoEnRevision
 
 
 class EventoSismico:
@@ -46,19 +46,36 @@ class EventoSismico:
         self.estadoActual = self.getEstadoActual()
 
     # ---------- reglas locales ----------
+    def _nombre_de(self, estado_obj) -> str | None:
+        if estado_obj is None:
+            return None
+
+        n = getattr(estado_obj, "nombre", None)
+        if isinstance(n, str):
+            return n
+        if callable(n):
+            try:
+                return n()
+            except Exception:
+                pass
+
+        if hasattr(estado_obj, "NAME"):
+            try:
+                return getattr(estado_obj, "NAME")
+            except Exception:
+                pass
+
+        return estado_obj.__class__.__name__
+
+
     def getEstadoActual(self) -> str | None:
-        """
-        Devuelve el nombre del estado del ÚLTIMO CambioEstado 'vigente' (sin fechaHoraFin).
-        Si por alguna razón no hay ninguno vigente (no debería pasar con el fix),
-        como fallback devuelve el nombre del último cambio de la lista.
-        """
-        # Buscar el más reciente vigente
         for c in reversed(self.cambiosEstado):
             if c.esActual():
-                return c.estado.nombre
-        # Fallback: último estado registrado
+                return self._nombre_de(c.estado)
+
         if self.cambiosEstado:
-            return self.cambiosEstado[-1].estado.nombre
+            return self._nombre_de(self.cambiosEstado[-1].estado)
+
         return None
         
     def buscarSismosARevisar(self) -> bool:
@@ -93,7 +110,7 @@ class EventoSismico:
             "estadoActual": self.getEstadoActual(),
         }
 
-    def bloquear(self, fechaHora: datetime, eventoSeleccionado: EventoSismico, resp =Optional[str]) -> None:
+    def bloquear(self, fechaHora: datetime, resp =Optional[str]) -> None:
         PteRevision().bloquear(self, fechaHora, resp)
 
 
@@ -164,11 +181,8 @@ class EventoSismico:
     def setNuevaMagnitud(self, nuevoMagnitud):
         self.valorMagnitud = nuevoMagnitud
 
-    def rechazarEvento(self, estadoRechazado: Estado, fechaHora, responsable):
-        for c in self.cambiosEstado:
-            if CambioEstado.esActual(c):
-                c.setFechaHoraFin(fechaHora)
-        self.crearCambioEstado(estadoRechazado, fechaHora, responsable)
+    def rechazar(self, fechaHora, responsable):
+        BloqueadoEnRevision().rechazar(self, fechaHora, responsable)
         
     def confirmar(self, estado, fechaHora, responsable):
         for c in self.cambiosEstado:
@@ -187,6 +201,6 @@ class EventoSismico:
         self.cambioEstadoActual = cambio
         return None
 
-    def setEstadoActual(self, estado: Estado) -> None:
+    def setEstadoActual(self, estado:EstadoEvento) -> None:
         self.estadoActual = estado
         return None

@@ -14,4 +14,5 @@ urlpatterns = [
     # NUEVA: opción mapa
     path("opcion-mapa/", PantallaRevision.tomarSeleccionOpcionMapa, name="opcion_mapa"),
     path("eventos/<int:evento_id>/accion/", PantallaRevision.tomarOpcionAccion, name="evento_accion"),
+    path("eventos/guardar/", PantallaRevision.guardar_cambios_view, name="guardar_cambios"),
 ]

@@ -24,9 +24,11 @@ class RepositorioEventosDjango:
         return [to_dom_evento(e, cache) for e in qs]
 
     # === Escrituras ===
+
+
     @transaction.atomic
     def cambiar_estado(self, id_evento: int, nuevo_estado: str, responsable: str = "sistema",
-                       motivo: Optional[str] = None) -> bool:
+                   motivo: Optional[str] = None) -> bool:
         try:
             ev = orm.EventoSismico.objects.select_for_update().get(pk=id_evento)
         except orm.EventoSismico.DoesNotExist:
@@ -34,21 +36,27 @@ class RepositorioEventosDjango:
 
         ahora = timezone.now()
 
-        # cerrar el vigente (si lo hay)
+    # Cerrar el vigente (si lo hay)
         prev = ev.cambios.order_by("-fechaHoraInicio").first()
         if prev and prev.fechaHoraFin is None:
             prev.fechaHoraFin = ahora
             prev.save(update_fields=["fechaHoraFin"])
 
-        estado, _ = orm.Estado.objects.get_or_create(nombre=nuevo_estado, ambito="EventoSismico")
+            estado, _ = orm.Estado.objects.get_or_create(
+            nombre=nuevo_estado, ambito="EventoSismico"
+            )
+
+    # *** FIX: usar usuario=responsable (y sacar motivo si no existe en el modelo) ***
         orm.CambioEstado.objects.create(
             evento=ev, estado=estado, fechaHoraInicio=ahora,
-            responsable=responsable, motivo=motivo
+            usuario=responsable
         )
+
         ev.estado_actual = estado
         ev.estado_actual_desde = ahora
         ev.save(update_fields=["estado_actual", "estado_actual_desde"])
         return True
+
 
     # helpers
     def bloquear_en_revision(self, id_evento: int, responsable: str = "sistema") -> bool:
@@ -64,3 +72,12 @@ def repositorio_eventos_django():
     if _singleton is None:
         _singleton = RepositorioEventosDjango()
     return _singleton
+
+def get_estado_actual(self, id_evento: int) -> Optional[str]:
+    try:
+        ev = orm.EventoSismico.objects.select_related("estado_actual").get(pk=id_evento)
+    except orm.EventoSismico.DoesNotExist:
+        return None
+    if ev.estado_actual_id and ev.estado_actual:
+        return ev.estado_actual.nombre
+    return None

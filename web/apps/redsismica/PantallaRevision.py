@@ -227,3 +227,13 @@ def tomarSeleccionOpcionMapa(request) -> HttpResponse:
             "user": usuario,
         })
     )
+
+@requiere_login
+@require_POST
+def guardar_cambios_view(request: HttpRequest) -> HttpResponse:
+    try:
+        gestor.finCU()
+        messages.success(request, "Cambios guardados correctamente.")
+    except Exception as e:
+        messages.error(request, f"No se pudieron guardar los cambios: {e}")
+    return redirect("menu_principal")

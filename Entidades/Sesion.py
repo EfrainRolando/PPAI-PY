@@ -1,4 +1,4 @@
-# Asegurate de tener algo así:
+
 from typing import Optional
 from Entidades.Usuario import Usuario
 
