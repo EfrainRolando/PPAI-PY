@@ -186,29 +186,39 @@ class GestorRevisionResultados:
         """Limpia el evento sísmico seleccionado de la memoria del gestor."""
         self.eventoSeleccionado = None
 
-    def tomarSeleccionEventoSismico(self,eleccion: int,mostrarDetalleEvento_cb: Callable[[Dict[str, Any]], None],mostrarSismograma_cb: Callable[[Dict[str, Any]], "HttpResponse"],) -> "HttpResponse":
+    def tomarSeleccionEventoSismico(
+        self,
+        eleccion: int,
+        mostrarDetalleEvento_cb: Callable[[Dict[str, Any]], None],
+        mostrarSismograma_cb: Callable[[Dict[str, Any]], "HttpResponse"],
+    ) -> "HttpResponse":
+    # Buscar y fijar el evento seleccionado
+        self.eventoSeleccionado = None
         for e in self.eventos:
             if eleccion == e.id_evento:
                 self.eventoSeleccionado = e
                 break
 
+    # Si no existe, devolvemos algo neutro y consistente (sin variables no definidas)
         if not self.eventoSeleccionado:
-            payload_vacio = {
+            payload = {
                 "evento": {},
-                "sismograma_img_url": "redsismica/sismografo.jpg",
-                "series_por_estacion":  series_ordenadas,
+                "sismograma_img_url": "redsismica/sismografo.jpeg",  # <- sin /static y con .jpeg
+                "series_por_estacion": [],
             }
-            return self.llamarCUGenerarSismograma(payload_vacio, mostrarSismograma_cb)
+            return self.llamarCUGenerarSismograma(payload, mostrarSismograma_cb)
 
-    
+    # Si existe, seguimos el flujo normal
         self.cambiarEstadoABloqueadoEnRevision()
         detalles_evento = self.eventoSeleccionado.getDatosEvento()
         mostrarDetalleEvento_cb({"evento": detalles_evento})
+
         series: List[Dict[str, Any]] = self.obtenerDatosSeriesTemporales()
         series_ordenadas = self.ordenarPorCodigoEstacion(series)
+
         payload = {
             "evento": detalles_evento,
-            "sismograma_img_url": "/static/redsismica/sismografo.jpg",  # asegurate de tener la imagen en estáticos
+            "sismograma_img_url": "redsismica/sismografo.jpeg",  # <- sin /static y con .jpeg
             "series_por_estacion": series_ordenadas,
         }
         return self.llamarCUGenerarSismograma(payload, mostrarSismograma_cb)

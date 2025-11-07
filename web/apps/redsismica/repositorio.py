@@ -5,25 +5,23 @@ from . import models as orm
 from .mappers import _Cache, to_dom_evento
 
 class RepositorioEventosDjango:
-    """Entrega objetos de TU dominio y persiste cambios de estado."""
-
-    # === Lecturas ===
     def obtener_eventos(self) -> List[object]:
+    # ANTES:
+    # qs = (orm.EventoSismico.objects
+    #       .select_related("alcance","clasificacion","origen","estado_actual")
+    #       .prefetch_related("cambios__estado","series__muestras__detalles__tipoDato"))
+
+    # DESPUÉS (Añadimos "series__sismografo__estacion" al prefetch):
         qs = (orm.EventoSismico.objects
-              .select_related("alcance","clasificacion","origen","estado_actual")
-              .prefetch_related("cambios__estado","series__muestras__detalles__tipoDato"))
+          .select_related("alcance","clasificacion","origen","estado_actual")
+          .prefetch_related(
+              "cambios__estado",
+              "series__sismografo__estacion",  # <-- AÑADIDO
+              "series__muestras__detalles__tipoDato"
+          ))
+    # ------------------------------------------------------------------
         cache = _Cache()
         return [to_dom_evento(e, cache) for e in qs]
-
-    def obtener_evento(self, id_evento: int) -> Optional[object]:
-        try:
-            e = (orm.EventoSismico.objects
-                 .select_related("alcance","clasificacion","origen","estado_actual")
-                 .prefetch_related("cambios__estado","series__muestras__detalles__tipoDato")
-                 .get(pk=id_evento))
-        except orm.EventoSismico.DoesNotExist:
-            return None
-        return to_dom_evento(e, _Cache())
 
     # === Escrituras ===
     @transaction.atomic

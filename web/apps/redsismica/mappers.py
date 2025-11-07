@@ -144,19 +144,19 @@ def to_dom_evento(o: orm.EventoSismico, cache: Optional[_Cache] = None) -> Event
     
     series: List[SerieTemporal] = []
     
+    # Esta es la consulta COMPLETA que trae todo.
+    # Le decimos que traiga las series CON (select_related) su sismógrafo
+    # Y TAMBIÉN (prefetch_related) todas sus muestras, detalles y tipo de dato.
     series_qs = o.series.select_related(
-        "sismografo", "sismografo__estacion"  # select_related para FK (1-a-1)
+        "sismografo", 
+        "sismografo__estacion"
     ).prefetch_related(
-        "muestras",                         # prefetch para related_name="muestras"
-        "muestras__detalles",               # prefetch para related_name="detalles"
-        "muestras__detalles__tipoDato"    # prefetch del FK tipoDato en Detalle
+        "muestras",                         # Carga MuestraSismica
+        "muestras__detalles",               # Carga DetalleMuestraSismica
+        "muestras__detalles__tipoDato"    # Carga TipoDeDato
     )
-
-    # ANTES: for s in o.series.select_related("sismografo", "sismografo__estacion").all():
     for s in series_qs.all():
         series.append(to_dom_serie(s, cache))
-    
-    # --- FIN DE LA CORRECCIÓN ---
 
     d = EventoSismico(
         id_evento=o.id, #
