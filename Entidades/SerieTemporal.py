@@ -34,10 +34,8 @@ class SerieTemporal:
 
         return {
             "condicionMarea": self.condicionMarea,
-            "desde": self.fechaHoraInicioRegistroMuestras.isoformat()
-                     if self.fechaHoraInicioRegistroMuestras else None,
-            "hasta": self.fechaHoraFinRegistroMuestras.isoformat()
-                     if self.fechaHoraFinRegistroMuestras else None,
+            "desde": self.fechaHoraInicioRegistroMuestras,
+            "hasta": self.fechaHoraFinRegistroMuestras,
             "frecuencia": self.frecuenciaMuestreo,
             "muestras": [m.obtenerDatosMuestraSismica() for m in (self.muestras or [])],
             "CodigoEstacion": codigo,

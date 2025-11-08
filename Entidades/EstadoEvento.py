@@ -7,21 +7,12 @@ from Entidades.CambioEstado import CambioEstado
 
 class EstadoEvento(ABC):
 
-    # Predicados por defecto (para filtros tipo sosPteRevision())
-    def sosAutoDetectado(self) -> bool: return False
-    def sosPteRevision(self) -> bool:   return False
-    def sosBloqueadoEnRevision(self) -> bool: return False
-
     def nombre(self) -> str:
         # Por si alguien quiere pedir nombre() en lugar de NAME
         return self.NAME
     def bloquear(
-        self,
-        evento: "EventoSismico",
-        fecha_hora: datetime,
-        responsable: Optional[str] = None,
-    ) -> CambioEstado:
-        ...
+    ) -> None:
+        print("bloqueando")
 
 
 class PteRevision(EstadoEvento):
@@ -34,22 +25,20 @@ class PteRevision(EstadoEvento):
         fecha_hora: datetime,
         responsable: Optional[str] = None,
     ) -> None:
-        # 1) cerrar vigente
-        cambio_actual = next((c for c in reversed(evento.cambiosEstado) if c.esActual()), None)
-        if cambio_actual is None:
-            raise ValueError("No hay CambioEstado vigente para cerrar.")
-        cambio_actual.setFechaHoraFin(fecha_hora)
-        estado_bloq = BloqueadoEnRevision()
+        for c in evento.cambiosEstado:
+            if c.esActual():
+                c.setFechaHoraFin(fecha_hora)
+        estadoBloqueado = BloqueadoEnRevision()
         nuevo = evento.crearCambioEstado(
-            estado=estado_bloq,
+            estado=estadoBloqueado,
             fechaHora=fecha_hora,
             nombreUsuario=responsable,
         )
         evento.setCambioEstado(nuevo)
         if hasattr(evento, "setEstadoActual"):
-            evento.setEstadoActual(estado_bloq)
+            evento.setEstadoActual(estadoBloqueado)
         else:
-            evento.estadoActual = estado_bloq
+            evento.estadoActual = estadoBloqueado
 
 
 class BloqueadoEnRevision(EstadoEvento):
@@ -60,10 +49,9 @@ class BloqueadoEnRevision(EstadoEvento):
 
     def rechazar(self,evento: "EventoSismico",fecha_hora: datetime,responsable: Optional[str] = None,
     ) -> None:
-        cambio_actual = next((c for c in reversed(evento.cambiosEstado) if c.esActual()), None)
-        if cambio_actual is None:
-            raise ValueError("No hay CambioEstado vigente para cerrar.")
-        cambio_actual.setFechaHoraFin(fecha_hora)
+        for c in evento.cambiosEstado:
+            if c.esActual():
+                c.setFechaHoraFin(fecha_hora)
         estado_rechazado = Rechazado()
         nuevo = evento.crearCambioEstado(
             estado=estado_rechazado,

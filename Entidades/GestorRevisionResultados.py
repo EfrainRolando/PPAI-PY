@@ -249,8 +249,6 @@ class GestorRevisionResultados:
     def finCU(self):
 
         responsable = self.buscarUsuario() if hasattr(self, 'buscarUsuario') else 'sistema'
-
-    # 1) ¿qué eventos persistimos?
         if getattr(self, 'eventoSeleccionado', None) is not None:
             eventos = [self.eventoSeleccionado]
         elif hasattr(self, 'eventos'):
@@ -262,21 +260,17 @@ class GestorRevisionResultados:
             try:
                 if getattr(e, "cambiosEstado", None):
                     ult = e.cambiosEstado[-1]
-                # Puede ser entidad Estado o un State concreto
                     nombre = getattr(ult.estado, "nombre", None)
                     if not nombre:
-                    # Si es una clase State concreta, usamos el nombre de clase
                         nombre = ult.estado.__class__.__name__
                     return nombre
             except Exception:
                 pass
-        # fallback al método actual
             try:
                 return e.getEstadoActual()
             except Exception:
                 return None
 
-    # 3) normalizador simple por si viniera un nombre de clase State
         NORMALIZA = {
             "PteRevision": "PteRevision",
             "BloqueadoEnRevision": "BloqueadoEnRevision",

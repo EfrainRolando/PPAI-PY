@@ -46,6 +46,13 @@ class EventoSismico:
         self.estadoActual = self.getEstadoActual()
 
     # ---------- reglas locales ----------
+    # @property 
+    # def estadoActual(self):
+    #     return self.estadoActual
+    # @estadoActual.setter
+    # def estadoActual(self, estado: EstadoEvento):
+    #     self.estadoActual = estado
+
     def _nombre_de(self, estado_obj) -> str | None:
         if estado_obj is None:
             return None
