@@ -1,144 +1,187 @@
-/* --- Paleta de Colores "Sísmica" ---
-   Usaremos un tema oscuro (tech) con acentos en naranja/ámbar 
-   que recuerdan a las alertas y a la tierra.
-*/
-:root {
-  --color-fondo: #222831; /* Un gris oscuro casi negro */
-  --color-superficie: #393E46; /* Un gris más claro para tarjetas */
-  --color-primario: #00ADB5; /* Un azul/verde "tech" */
-  --color-acento: #FF5722; /* Naranja vibrante para alertas/botones */
-  --color-texto: #EEEEEE; /* Texto claro */
-  --color-texto-secundario: #ADB5BD;
+/* ============================
+   Tema con variables CSS + toggle
+   - Modo claro (default)
+   - Modo oscuro (tu paleta "Sísmica")
+   ============================ */
+
+/* ---------- Paleta CLARA (default) ---------- */
+:root,
+:root[data-theme="light"] {
+  --color-fondo: #f7f9fc;
+  --color-superficie: #ffffff;
+  --color-primario: #005f63;         /* tech verdoso más sobrio para luz */
+  --color-acento: #ff6a3d;           /* naranja */
+  --color-texto: #1b1f24;
+  --color-texto-secundario: #5b6672;
+
+  /* tabla/celdas */
+  --table-head-bg: #e8edf3;
+  --table-head-fg: var(--color-primario);
+  --table-stripe-bg: #f1f4f8;
+  --table-border: #d6dde6;
+
+  /* realces */
+  --borde-card: #e3e7ec;
+  --shadow: 0 4px 12px rgba(0,0,0,0.08);
+  --focus-ring: rgba(0, 95, 99, 0.25);
 }
 
+/* ---------- Paleta OSCURA (Sísmica) ---------- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-fondo: #222831;
+    --color-superficie: #393E46;
+    --color-primario: #00ADB5;
+    --color-acento: #FF5722;
+    --color-texto: #EEEEEE;
+    --color-texto-secundario: #ADB5BD;
+
+    --table-head-bg: #2a2f36;
+    --table-head-fg: var(--color-primario);
+    --table-stripe-bg: #4a5058;
+    --table-border: #4a5058;
+
+    --borde-card: #4a5058;
+    --shadow: 0 4px 12px rgba(0,0,0,0.2);
+    --focus-ring: rgba(0, 173, 181, 0.25);
+  }
+}
+
+/* Forzado manual: data-theme="dark" */
+:root[data-theme="dark"] {
+  --color-fondo: #222831;
+  --color-superficie: #393E46;
+  --color-primario: #00ADB5;
+  --color-acento: #FF5722;
+  --color-texto: #EEEEEE;
+  --color-texto-secundario: #ADB5BD;
+
+  --table-head-bg: #2a2f36;
+  --table-head-fg: var(--color-primario);
+  --table-stripe-bg: #4a5058;
+  --table-border: #4a5058;
+
+  --borde-card: #4a5058;
+  --shadow: 0 4px 12px rgba(0,0,0,0.2);
+  --focus-ring: rgba(0, 173, 181, 0.25);
+}
+
+/* ---------- Base UI ---------- */
 body {
   background-color: var(--color-fondo);
   color: var(--color-texto);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
-/* --- 1. Estilos Base --- */
-
 .navbar {
   background-color: var(--color-superficie) !important;
   border-bottom: 2px solid var(--color-primario);
 }
-
 .navbar-brand, .nav-link, .btn-outline-secondary {
   color: var(--color-texto) !important;
 }
-
 .btn-outline-secondary:hover {
   background-color: var(--color-primario);
   border-color: var(--color-primario);
+  color: #fff !important;
 }
 
 .card {
   background-color: var(--color-superficie);
-  border: 1px solid #4a5058;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--borde-card);
+  box-shadow: var(--shadow);
 }
-
-.h1, .h2, .h3, .h4, .h5, .h6 {
+.h1, .h2, .h3, .h4, .h5, .h6, h1, h2, h3, h4, h5, h6, strong {
   color: var(--color-texto);
 }
+.text-muted { color: var(--color-texto-secundario) !important; }
 
-.text-muted {
-  color: var(--color-texto-secundario) !important;
-}
-
-/* Botón principal */
+/* Botón principal / acentos */
 .btn-primary {
   background-color: var(--color-acento);
   border-color: var(--color-acento);
   font-weight: bold;
 }
 .btn-primary:hover {
-  background-color: #e64a19;
-  border-color: #e64a19;
+  filter: brightness(0.95);
 }
+.btn, .badge { color: #fff; }
 
-/* --- 2. Página de Login --- */
-.login-container {
-  max-width: 450px;
-  margin: 5rem auto;
-  padding: 2.5rem;
-  background-color: var(--color-superficie);
-  border-radius: 8px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-}
-
-.login-header {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.login-header i {
-  font-size: 4rem; /* Tamaño del ícono */
-  color: var(--color-primario);
-}
-
-.login-header h1 {
-  margin-top: 1rem;
-  color: var(--color-texto);
-}
-
+/* Formularios */
 .form-control {
   background-color: var(--color-fondo);
-  border: 1px solid #4a5058;
+  border: 1px solid var(--borde-card);
   color: var(--color-texto);
 }
 .form-control:focus {
   background-color: var(--color-fondo);
   color: var(--color-texto);
   border-color: var(--color-primario);
-  box-shadow: 0 0 0 0.25rem rgba(0, 173, 181, 0.25);
+  box-shadow: 0 0 0 0.25rem var(--focus-ring);
 }
 
-/* --- 3. Menú Principal (Onda Sísmica) --- */
+/* Menú principal (onda sísmica) — mantiene tu imagen y estilo */
 .card-menu-principal {
-  background: 
-    linear-gradient(rgba(57, 62, 70, 0.85), rgba(57, 62, 70, 0.85)),
-    url('https://images.unsplash.com/photo-1590234557766-0f1c4966601f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80');
+  background:
+    linear-gradient(var(--color-superficie, #393E46)cc, var(--color-superficie, #393E46)cc),
+    url('https://images.unsplash.com/photo-1590234557766-0f1c4966601f?auto=format&fit=crop&w=1740&q=80');
   background-size: cover;
   background-position: center;
   border: 1px solid var(--color-primario);
 }
 
-/* Animación de Pulso para el botón */
-.btn-pulse {
-  animation: pulse-animation 2s infinite;
-}
-
+/* Pulso botón */
+.btn-pulse { animation: pulse-animation 2s infinite; }
 @keyframes pulse-animation {
-  0% {
-    box-shadow: 0 0 0 0 rgba(255, 87, 34, 0.7);
-  }
-  100% {
-    box-shadow: 0 0 0 20px rgba(255, 87, 34, 0);
-  }
+  0%   { box-shadow: 0 0 0 0 color-mix(in oklab, var(--color-acento) 70%, transparent); }
+  100% { box-shadow: 0 0 0 20px transparent; }
 }
 
-/* --- 4. Página de Eventos (Tabla) --- */
+/* Tablas */
 .table {
   --bs-table-bg: var(--color-superficie);
-  --bs-table-striped-bg: #4a5058;
+  --bs-table-striped-bg: var(--table-stripe-bg);
   --bs-table-color: var(--color-texto);
-  border-color: #4a5058;
+  border-color: var(--table-border);
 }
 thead th {
-  background-color: #2a2f36;
-  color: var(--color-primario);
+  background-color: var(--table-head-bg);
+  color: var(--table-head-fg);
   border-bottom: 2px solid var(--color-primario) !important;
 }
 
-/* --- 5. Página de Modificar Evento --- */
+/* Página Modificar Evento (tu clase) */
 .card-edit {
-  background-color: #3b3a30; /* Fondo con tinte "amarillo" oscuro */
+  /* en oscuro: tinte cálido, en claro: leve crema */
+  background-color: color-mix(in oklab, var(--color-superficie), #ffe8c0 6%);
   border-color: var(--color-acento);
 }
-
 .card-edit .form-label {
   color: var(--color-acento);
   font-weight: bold;
+}
+
+/* Acordeón / Sismograma */
+.accordion-button { color: var(--color-texto); }
+.accordion-body { color: var(--color-texto); }
+.bg-body-tertiary { background-color: color-mix(in oklab, var(--color-fondo), #000 6%) !important; }
+
+/* Helpers */
+.badge.text-bg-light {
+  background-color: color-mix(in oklab, var(--color-superficie), #fff 25%);
+  color: var(--color-texto);
+}
+
+/* Estilo por defecto de las badges del estado */
+.estado-badge {
+  background-color: #ffffff;    /* tu cajita blanca */
+  color: #222;                  /* texto oscuro por defecto */
+  border: 1px solid #c9c9c9;    /* borde suave */
+}
+
+/* Forzar NEGRO cuando es BloqueadoEnRevision */
+.estado-badge.bloqueadoenrevision {
+  color: #000 !important;
+  border-color: #000 !important;        /* opcional: más contraste */
+  background-color: #ffffff !important;  /* mantiene la cajita blanca */
 }

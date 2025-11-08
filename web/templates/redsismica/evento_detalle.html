@@ -10,6 +10,47 @@
     </h1>
   </div>
 
+<style>
+  /* FORZAR ALTO CONTRASTE EN ESTA PÁGINA (fallback inmediato) */
+  .card, .card * { color: #f8f9fa !important; }              /* texto claro en cards */
+  .card-header { background: #2b3036 !important; }           /* header más oscuro */
+  .card-body { background: #1f2328 !important; }             /* cuerpo dark legible */
+
+  h1, h2, h3, h4, h5, h6, strong { color: #ffffff !important; }
+  .text-muted, small, .badge.text-bg-light { color: #d3d7dc !important; }
+
+  /* Tablas: encabezado y filas con contraste */
+  .table { color: #eef2f6 !important; }
+  .table thead, .table-light { 
+    background: #2a2f36 !important; 
+    color: #e9ecef !important; 
+  }
+  .table tbody tr { background: #22262c !important; }
+  .table tbody tr:hover { background: #2a2f36 !important; }
+  .table td, .table th { border-color: #3a3f46 !important; }
+
+  /* Acordeón (botón y body) */
+  .accordion-button { 
+    background: #2a2f36 !important; 
+    color: #e9ecef !important; 
+  }
+  .accordion-button:not(.collapsed) {
+    background: #30353c !important;
+    color: #ffffff !important;
+  }
+  .accordion-body { background: #1f2328 !important; color: #f8f9fa !important; }
+
+  /* Fila expandida de series */
+  .bg-body-tertiary { background: #1a1d21 !important; color: #f8f9fa !important; }
+
+  /* Botones: mantener identidad, pero con texto legible */
+  .btn, .btn * { color: #ffffff !important; }
+
+  /* Ícono de título que usa var(--color-primario) */
+  .bi-graph-up-arrow { filter: none !important; }
+</style>
+
+
   <!-- Card: Resumen -->
   <div class="card shadow-sm mb-3">
     <div class="card-body">
@@ -19,7 +60,7 @@
           <div><strong>Magnitud:</strong> {{ evento.magnitud }}</div>
           <div>
             <strong>Estado actual:</strong>
-            <span class="badge text-bg-light">{{ evento.estadoActual }}</span>
+            <span class="badge estado-badge {{ evento.estadoActual|slugify }}">{{ evento.estadoActual }}</span>
           </div>
         </div>
         <div class="col-md-4">
