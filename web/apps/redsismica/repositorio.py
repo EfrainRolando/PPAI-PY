@@ -42,9 +42,7 @@ class RepositorioEventosDjango:
             prev.fechaHoraFin = ahora
             prev.save(update_fields=["fechaHoraFin"])
 
-            estado, _ = orm.Estado.objects.get_or_create(
-            nombre=nuevo_estado, ambito="EventoSismico"
-            )
+            estado, _ = orm.Estado.objects.get_or_create(nombre=nuevo_estado)
 
     # *** FIX: usar usuario=responsable (y sacar motivo si no existe en el modelo) ***
         orm.CambioEstado.objects.create(

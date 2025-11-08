@@ -17,14 +17,16 @@ class Command(BaseCommand):
 
         # ------------------- Estados -------------------
         estados = [
-            ("AutoDetectado", "EventoSismico"),
-            ("PteRevision", "EventoSismico"),
-            ("BloqueadoEnRevision", "EventoSismico"),
-            ("Aprobado", "EventoSismico"),
-            ("Rechazado", "EventoSismico"),
+            "AutoDetectado",
+            "PteRevision",
+            "BloqueadoEnRevision",
+            "Rechazado",
+            "Confirmado",
+            "Derivado"
         ]
-        for n, a in estados:
-            Estado.objects.get_or_create(nombre=n, ambito=a)
+
+        for e in estados:
+            orm.Estado.objects.get_or_create(nombre=e)
 
         # ------------------- Catálogos -------------------
         AlcanceSismo.objects.get_or_create(nombre="Local", descripcion="Percibido solo en el epicentro")
