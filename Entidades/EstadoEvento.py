@@ -19,26 +19,32 @@ class PteRevision(EstadoEvento):
     NAME = "PteRevision"
     def sosPteRevision(self) -> bool: return True
 
-    def bloquear(
-        self,
-        evento: "EventoSismico",
-        fecha_hora: datetime,
-        responsable: Optional[str] = None,
-    ) -> None:
-        for c in evento.cambiosEstado:
-            if c.esActual():
-                c.setFechaHoraFin(fecha_hora)
-        estadoBloqueado = BloqueadoEnRevision()
-        nuevo = evento.crearCambioEstado(
-            estado=estadoBloqueado,
-            fechaHora=fecha_hora,
-            nombreUsuario=responsable,
-        )
+    def bloquear(self, evento: "EventoSismico", fechaHora: datetime, responsable: Optional[str] = None,) -> None:
+        self.buscarCEActual(evento, fechaHora)
+        estadoBloqueado = self.crearProxEstado()
+        nuevo = self.crearCE(evento, estadoBloqueado, fechaHora, responsable)
         evento.setCambioEstado(nuevo)
         if hasattr(evento, "setEstadoActual"):
             evento.setEstadoActual(estadoBloqueado)
         else:
             evento.estadoActual = estadoBloqueado
+
+    def crearProxEstado(self)-> EstadoEvento:
+        return  BloqueadoEnRevision()
+    
+    def buscarCEActual(self, evento, fechaHora)-> None:
+        for c in evento.cambiosEstado:
+            if c.esActual():
+                c.setFechaHoraFin(fechaHora)
+
+    def crearCE(self, evento, estadoBloqueado, fechaHora, responsable) -> CambioEstado:
+            nuevo = evento.crearCambioEstado(
+            estado=estadoBloqueado,
+            fechaHora=fechaHora,
+            nombreUsuario=responsable,
+            )
+            return nuevo
+
 
 
 class BloqueadoEnRevision(EstadoEvento):
@@ -47,22 +53,34 @@ class BloqueadoEnRevision(EstadoEvento):
     def bloquear(self, evento, fecha_hora, responsable = None):
         return super().bloquear(evento, fecha_hora, responsable)
 
-    def rechazar(self,evento: "EventoSismico",fecha_hora: datetime,responsable: Optional[str] = None,
+    def rechazar(self,evento: "EventoSismico",fechaHora: datetime,responsable: Optional[str] = None,
     ) -> None:
-        for c in evento.cambiosEstado:
-            if c.esActual():
-                c.setFechaHoraFin(fecha_hora)
-        estado_rechazado = Rechazado()
-        nuevo = evento.crearCambioEstado(
-            estado=estado_rechazado,
-            fechaHora=fecha_hora,
-            nombreUsuario=responsable,
-        )
+        self.buscarCEActual(evento, fechaHora)
+        estado_rechazado = self.crearProxEstado()
+        nuevo = self.crearCE(evento, estado_rechazado, fechaHora, responsable)
         evento.setCambioEstado(nuevo)
         if hasattr(evento, "setEstadoActual"):
             evento.setEstadoActual(estado_rechazado)
         else:
             evento.estadoActual = estado_rechazado
+
+    def crearProxEstado(self)-> EstadoEvento:
+        return Rechazado
+    
+    def buscarCEActual(self, evento, fechaHora) -> None:
+
+        for c in evento.cambiosEstado:
+            if c.esActual():
+                c.setFechaHoraFin(fechaHora)
+
+    def crearCE(self, evento, estadoRechazado, fechaHora, responsable):
+            nuevo = evento.crearCambioEstado(
+            estado=estadoRechazado,
+            fechaHora=fechaHora,
+            nombreUsuario=responsable,
+        )
+            return nuevo
+
 
 class Rechazado(EstadoEvento):
     NAME = "Rechazado"
