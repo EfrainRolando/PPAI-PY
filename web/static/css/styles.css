@@ -1,187 +1,246 @@
 /* ============================
-   Tema con variables CSS + toggle
-   - Modo claro (default)
-   - Modo oscuro (tu paleta "Sísmica")
+   Red Sísmica UX — Tema oscuro optimizado
    ============================ */
 
-/* ---------- Paleta CLARA (default) ---------- */
-:root,
-:root[data-theme="light"] {
-  --color-fondo: #f7f9fc;
-  --color-superficie: #ffffff;
-  --color-primario: #005f63;         /* tech verdoso más sobrio para luz */
-  --color-acento: #ff6a3d;           /* naranja */
-  --color-texto: #1b1f24;
-  --color-texto-secundario: #5b6672;
+:root {
+  --color-fondo: #181B20;
+  --color-superficie: #23272E;
+  --color-primario: #00B8A9;
+  --color-acento: #FF7043;
+  --color-texto: #F5F5F5;
+  --color-texto-secundario: #9EA5AE;
+  --color-borde: #30363D;
 
-  /* tabla/celdas */
-  --table-head-bg: #e8edf3;
-  --table-head-fg: var(--color-primario);
-  --table-stripe-bg: #f1f4f8;
-  --table-border: #d6dde6;
+  --estado-aprobado: #00C853;
+  --estado-rechazado: #E53935;
+  --estado-pendiente: #FFD54F;
 
-  /* realces */
-  --borde-card: #e3e7ec;
-  --shadow: 0 4px 12px rgba(0,0,0,0.08);
-  --focus-ring: rgba(0, 95, 99, 0.25);
+  --sombra: 0 6px 14px rgba(0,0,0,0.4);
+  --radius: 12px;
+  --font: "Inter", "Segoe UI", Roboto, sans-serif;
 }
 
-/* ---------- Paleta OSCURA (Sísmica) ---------- */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --color-fondo: #222831;
-    --color-superficie: #393E46;
-    --color-primario: #00ADB5;
-    --color-acento: #FF5722;
-    --color-texto: #EEEEEE;
-    --color-texto-secundario: #ADB5BD;
-
-    --table-head-bg: #2a2f36;
-    --table-head-fg: var(--color-primario);
-    --table-stripe-bg: #4a5058;
-    --table-border: #4a5058;
-
-    --borde-card: #4a5058;
-    --shadow: 0 4px 12px rgba(0,0,0,0.2);
-    --focus-ring: rgba(0, 173, 181, 0.25);
-  }
-}
-
-/* Forzado manual: data-theme="dark" */
-:root[data-theme="dark"] {
-  --color-fondo: #222831;
-  --color-superficie: #393E46;
-  --color-primario: #00ADB5;
-  --color-acento: #FF5722;
-  --color-texto: #EEEEEE;
-  --color-texto-secundario: #ADB5BD;
-
-  --table-head-bg: #2a2f36;
-  --table-head-fg: var(--color-primario);
-  --table-stripe-bg: #4a5058;
-  --table-border: #4a5058;
-
-  --borde-card: #4a5058;
-  --shadow: 0 4px 12px rgba(0,0,0,0.2);
-  --focus-ring: rgba(0, 173, 181, 0.25);
-}
-
-/* ---------- Base UI ---------- */
+/* ---------- BASE ---------- */
 body {
   background-color: var(--color-fondo);
   color: var(--color-texto);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: var(--font);
+  margin: 0;
+  padding: 0;
 }
 
-.navbar {
-  background-color: var(--color-superficie) !important;
-  border-bottom: 2px solid var(--color-primario);
-}
-.navbar-brand, .nav-link, .btn-outline-secondary {
-  color: var(--color-texto) !important;
-}
-.btn-outline-secondary:hover {
-  background-color: var(--color-primario);
-  border-color: var(--color-primario);
-  color: #fff !important;
-}
-
-.card {
-  background-color: var(--color-superficie);
-  border: 1px solid var(--borde-card);
-  box-shadow: var(--shadow);
-}
-.h1, .h2, .h3, .h4, .h5, .h6, h1, h2, h3, h4, h5, h6, strong {
+h1, h2, h3, h4, h5, h6, strong {
   color: var(--color-texto);
+  font-weight: 600;
 }
+
 .text-muted { color: var(--color-texto-secundario) !important; }
 
-/* Botón principal / acentos */
+/* ---------- NAVBAR ---------- */
+.navbar {
+  background-color: var(--color-superficie);
+  border-bottom: 2px solid var(--color-primario);
+  box-shadow: var(--sombra);
+}
+.navbar-brand {
+  color: var(--color-primario) !important;
+  font-weight: 700;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.navbar-brand i {
+  color: var(--color-acento);
+}
+
+/* ---------- CARDS ---------- */
+.card {
+  background-color: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radius);
+  box-shadow: var(--sombra);
+  color: var(--color-texto);
+}
+.card-header {
+  background: color-mix(in oklab, var(--color-superficie), #000 8%);
+  border-bottom: 1px solid var(--color-borde);
+  font-weight: 600;
+}
+
+/* ---------- BOTONES ---------- */
+.btn {
+  border-radius: 8px;
+  font-weight: 600;
+  transition: 0.2s;
+}
 .btn-primary {
+  background-color: var(--color-primario);
+  border-color: var(--color-primario);
+}
+.btn-primary:hover { filter: brightness(1.1); }
+
+.btn-acento {
   background-color: var(--color-acento);
   border-color: var(--color-acento);
+  color: #fff;
+}
+.btn-acento:hover { filter: brightness(1.1); }
+
+.btn-success { background-color: var(--estado-aprobado); border-color: var(--estado-aprobado); }
+.btn-danger  { background-color: var(--estado-rechazado); border-color: var(--estado-rechazado); }
+.btn-warning { background-color: var(--estado-pendiente); border-color: var(--estado-pendiente); color: #222; }
+
+.btn-outline-secondary {
+  border-color: var(--color-texto-secundario);
+  color: var(--color-texto-secundario);
+}
+.btn-outline-secondary:hover {
+  background-color: var(--color-texto-secundario);
+  color: #000;
+}
+
+/* ---------- TABLAS ---------- */
+.table {
+  color: var(--color-texto);
+  border-color: var(--color-borde);
+}
+.table thead {
+  background-color: #1E2127;
+  color: var(--color-primario);
+  border-bottom: 2px solid var(--color-primario);
+}
+.table-striped > tbody > tr:nth-of-type(odd) {
+  background-color: #1B1E23;
+}
+.table-striped > tbody > tr:nth-of-type(even) {
+  background-color: #20242B;
+}
+.table-hover tbody tr:hover {
+  background-color: #2A2E36;
+}
+
+/* ---------- ESTADOS ---------- */
+.estado-badge {
+  border-radius: 6px;
+  padding: 0.35em 0.65em;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #fff;
+}
+.estado-badge.aprobado { background-color: var(--estado-aprobado); }
+.estado-badge.rechazado { background-color: var(--estado-rechazado); }
+.estado-badge.penderevision,
+.estado-badge.pterevision { background-color: var(--estado-pendiente); color: #222; }
+.estado-badge.bloqueadoenrevision { background-color: #fff; color: #000; }
+
+/* ---------- LOGIN ---------- */
+.login-container {
+  max-width: 420px;
+  margin: 60px auto;
+  padding: 2rem;
+  background-color: var(--color-superficie);
+  border-radius: var(--radius);
+  box-shadow: var(--sombra);
+}
+.login-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-primario);
+  justify-content: center;
   font-weight: bold;
-}
-.btn-primary:hover {
-  filter: brightness(0.95);
-}
-.btn, .badge { color: #fff; }
-
-/* Formularios */
-.form-control {
-  background-color: var(--color-fondo);
-  border: 1px solid var(--borde-card);
-  color: var(--color-texto);
-}
-.form-control:focus {
-  background-color: var(--color-fondo);
-  color: var(--color-texto);
-  border-color: var(--color-primario);
-  box-shadow: 0 0 0 0.25rem var(--focus-ring);
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
 }
 
-/* Menú principal (onda sísmica) — mantiene tu imagen y estilo */
+/* ---------- MENU PRINCIPAL ---------- */
 .card-menu-principal {
-  background:
-    linear-gradient(var(--color-superficie, #393E46)cc, var(--color-superficie, #393E46)cc),
-    url('https://images.unsplash.com/photo-1590234557766-0f1c4966601f?auto=format&fit=crop&w=1740&q=80');
+  background: linear-gradient(180deg, rgba(35,39,46,0.9), rgba(35,39,46,0.95)),
+              url('https://images.unsplash.com/photo-1590234557766-0f1c4966601f?auto=format&fit=crop&w=1740&q=80');
   background-size: cover;
   background-position: center;
   border: 1px solid var(--color-primario);
+  border-radius: var(--radius);
+  color: #fff;
+}
+.btn-pulse {
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--color-acento) 70%, transparent); }
+  100% { box-shadow: 0 0 0 18px transparent; }
 }
 
-/* Pulso botón */
-.btn-pulse { animation: pulse-animation 2s infinite; }
-@keyframes pulse-animation {
-  0%   { box-shadow: 0 0 0 0 color-mix(in oklab, var(--color-acento) 70%, transparent); }
-  100% { box-shadow: 0 0 0 20px transparent; }
+/* ---------- MAPA / IMÁGENES ---------- */
+img {
+  border-radius: 8px;
+  max-width: 100%;
 }
 
-/* Tablas */
-.table {
-  --bs-table-bg: var(--color-superficie);
-  --bs-table-striped-bg: var(--table-stripe-bg);
-  --bs-table-color: var(--color-texto);
-  border-color: var(--table-border);
-}
-thead th {
-  background-color: var(--table-head-bg);
-  color: var(--table-head-fg);
-  border-bottom: 2px solid var(--color-primario) !important;
-}
-
-/* Página Modificar Evento (tu clase) */
-.card-edit {
-  /* en oscuro: tinte cálido, en claro: leve crema */
-  background-color: color-mix(in oklab, var(--color-superficie), #ffe8c0 6%);
-  border-color: var(--color-acento);
-}
-.card-edit .form-label {
-  color: var(--color-acento);
-  font-weight: bold;
-}
-
-/* Acordeón / Sismograma */
-.accordion-button { color: var(--color-texto); }
-.accordion-body { color: var(--color-texto); }
-.bg-body-tertiary { background-color: color-mix(in oklab, var(--color-fondo), #000 6%) !important; }
-
-/* Helpers */
-.badge.text-bg-light {
-  background-color: color-mix(in oklab, var(--color-superficie), #fff 25%);
+/* ---------- FORMULARIOS ---------- */
+.form-control {
+  background-color: #1E2228;
+  border: 1px solid var(--color-borde);
   color: var(--color-texto);
 }
+.form-control:focus {
+  border-color: var(--color-primario);
+  box-shadow: 0 0 0 0.25rem rgba(0,184,169,0.25);
+}
 
-/* Estilo por defecto de las badges del estado */
+/* ---------- FOOTER ---------- */
+footer {
+  text-align: center;
+  padding: 1rem;
+  color: var(--color-texto-secundario);
+  font-size: 0.85rem;
+  margin-top: 40px;
+  border-top: 1px solid var(--color-borde);
+}
+/* ============================
+   FIX: texto oscuro en badges de estado
+   ============================ */
 .estado-badge {
-  background-color: #ffffff;    /* tu cajita blanca */
-  color: #222;                  /* texto oscuro por defecto */
-  border: 1px solid #c9c9c9;    /* borde suave */
+  border-radius: 6px;
+  padding: 0.35em 0.65em;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #000 !important;             /* Texto negro */
+  background-color: #ffffff !important; /* Fondo blanco */
+  border: 1px solid #c9c9c9;          /* Borde suave */
 }
 
-/* Forzar NEGRO cuando es BloqueadoEnRevision */
-.estado-badge.bloqueadoenrevision {
-  color: #000 !important;
-  border-color: #000 !important;        /* opcional: más contraste */
-  background-color: #ffffff !important;  /* mantiene la cajita blanca */
+/* =====================================
+   FIX DEFINITIVO: texto negro en estados
+   ===================================== */
+span.estado-badge,
+.badge.estado-badge {
+  background-color: #ffffff !important;   /* Fondo blanco */
+  color: #000000 !important;              /* Texto negro */
+  border: 1px solid #c9c9c9 !important;   /* Borde gris suave */
 }
+
+/* Colores de borde por tipo de estado */
+span.estado-badge.aprobado,
+.badge.estado-badge.aprobado {
+  border-color: #00C853 !important;
+}
+
+span.estado-badge.rechazado,
+.badge.estado-badge.rechazado {
+  border-color: #E53935 !important;
+}
+
+span.estado-badge.pterevision,
+span.estado-badge.penderevision,
+.badge.estado-badge.pterevision,
+.badge.estado-badge.penderevision {
+  border-color: #FFD54F !important;
+}
+
+span.estado-badge.bloqueadoenrevision,
+.badge.estado-badge.bloqueadoenrevision {
+  border-color: #000000 !important;
+}
+
