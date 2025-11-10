@@ -15,15 +15,10 @@ class GestorRevisionResultados:
         self.repo = RepositorioEventosDjango()
         self.eventoSeleccionado: Optional[EventoSismico] = None
         self.eventos: List[EventoSismico] = self.repo.obtener_eventos()
-
-    #Metodo Inicio Gestor Revision Resultados
     def opcionRegistrarResultado(self, mostrarEventosSismicos: Callable[[List[Dict]], "HttpResponse"]) -> dict:
         self.limpiar_seleccion()
-        # 1) Filtra eventos a revisar (el dominio decide qué entra)
         datos = self.buscarSismosARevisar()
-        # 2) Ordena (también en el dominio)
         datosOrd = self.ordenarEventosPorFechaOcurrencia(datos)
-        # 3) Adaptación de claves para el template (prepara el VM)
         eventos_vm = []
         for d in datosOrd:
             eventos_vm.append({
@@ -34,7 +29,6 @@ class GestorRevisionResultados:
                 "hipocentro": {"lat": d.get("latitudHipocentro"), "lon": d.get("longitudHipocentro")},
                 "estado": d.get("estadoActual"),
             })
-        # 4) Devuelve el contexto completo que la vista (Pantalla) necesita
         return mostrarEventosSismicos(eventos_vm)
 
     #Logica de filtrado y ordenamiento
@@ -56,9 +50,8 @@ class GestorRevisionResultados:
     
     
     def buscarDatosEventoSismico(self) -> Dict[str, Any]:
-        # Ya no recibe evento_id, usa self.eventoSeleccionado
         if not self.eventoSeleccionado: 
-            return {"evento": {}} # Manejar si no hay nada seleccionado
+            return {"evento": {}} 
 
         return {
             "evento": self.eventoSeleccionado.getDatosEvento()
@@ -86,7 +79,7 @@ class GestorRevisionResultados:
 
     def tomarSeleccionOpcionMapa(self, mostrarMapa_cb: Callable[[Dict[str, Any]] , "HttpResponse"]) -> "HttpResponse":
         if not self.eventoSeleccionado:
-            payload = {"evento": {},"mapa_img_url": "redsismica/sismo-mapa.jpg",  # <-- TU ARCHIVO EN static
+            payload = {"evento": {},"mapa_img_url": "redsismica/sismo-mapa.jpg", 
                        }
             return mostrarMapa_cb(payload)
 
@@ -110,7 +103,7 @@ class GestorRevisionResultados:
     def tomarModificaciones(self, nuevoOrigenNombre, nuevoOrigenDescripcion, nuevoAlcanceNombre,
                             nuevoAlcanceDescripcion, nuevoMagnitud) -> dict:
         if not self.eventoSeleccionado: 
-            return {} # Manejar si no hay nada seleccionado
+            return {}
         
         self.eventoSeleccionado.setNuevoOrigen(nuevoOrigenNombre, nuevoOrigenDescripcion)
         self.eventoSeleccionado.setNuevoAlcance(nuevoAlcanceNombre, nuevoAlcanceDescripcion)
@@ -124,7 +117,6 @@ class GestorRevisionResultados:
     def tomarOpcionAccion(self, evento_id: int, accion: str) -> bool:
         a = (accion or "").strip().lower()
 
-    # Asegurar que el evento seleccionado sea el pedido
         if (not self.eventoSeleccionado) or (self.eventoSeleccionado.id_evento != evento_id):
             self.eventoSeleccionado = next((e for e in self.eventos if e.id_evento == evento_id), None)
 
@@ -148,12 +140,8 @@ class GestorRevisionResultados:
 
 
     def validarDatosEventoSismico(self) -> None:
-        # Ya no recibe evento_id, usa self.eventoSeleccionado
         if not self.eventoSeleccionado or self.eventoSeleccionado.getDatosEvento() is None:
             print("Error: Los datos del evento sismico no son validos.")
-            # En una app web, esto debería lanzar una excepción
-            # raise ValueError("Datos de evento no válidos")
-
 
     def buscarUsuario(self) -> str:
         if self.sesion is None or self.sesion.getUsuario() is None:
@@ -277,15 +265,12 @@ class GestorRevisionResultados:
             "Rechazado": "Rechazado",
             "Confirmado": "Confirmado",
             "Derivado": "Derivado",
-        # Por si los estados concretos son clases con estos nombres:
             "PteRevisionState": "PteRevision",
             "BloqueadoEnRevisionState": "BloqueadoEnRevision",
             "RechazadoState": "Rechazado",
             "ConfirmadoState": "Confirmado",
             "DerivadoState": "Derivado",
     }
-
-    # 4) persistimos solo si difiere de DB (idempotente)
         for e in eventos:
             if not hasattr(e, "id_evento") or e.id_evento is None:
                 continue
@@ -300,13 +285,10 @@ class GestorRevisionResultados:
                 estado_db = self.repo.get_estado_actual(e.id_evento)
             except Exception:
                 estado_db = None
-
-        # Si es igual, no escribimos; si difiere, persistimos
             if estado_db != estado_final:
                 try:
                     self.repo.cambiar_estado(e.id_evento, estado_final, responsable)
                 except Exception:
-                # no frenamos toda la CU por un error puntual
                     continue
 
         return True

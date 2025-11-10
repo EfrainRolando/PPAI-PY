@@ -3,28 +3,23 @@ from django.http import HttpRequest, HttpResponse
 from django.core import signing
 from functools import wraps
 from datetime import datetime
-# views.py
 from django.contrib import messages
 from django.shortcuts import redirect, get_object_or_404
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
-
-
 from .forms import LoginForm
-
-# Importamos TU Gestor/Sesion/Entidades (gracias al sys.path agregado en manage.py)
 from Entidades.GestorRevisionResultados import GestorRevisionResultados
 from Entidades.Sesion import Sesion
 
-# ====== Login con COOKIE firmada (sin BD ni django.contrib.auth) ======
+# ====== Login con COOKIE firmada  ======
 COOKIE_NAME = "auth_user"
 COOKIE_MAX_AGE = 60 * 60 * 8  # 8 horas
 
-# --- INSTANCIA ÚNICA (Como pediste) ---
+# --- INSTANCIA ÚNICA ---
 sesion = Sesion()
 gestor = GestorRevisionResultados(sesion)
 
-# Usuarios de ejemplo (reemplazá por tu verificación real si quisieras)
+# Usuarios 
 USUARIOS = {
     "efra": "1234",
     "admin": "admin",
@@ -53,10 +48,8 @@ def login_view(request: HttpRequest) -> HttpResponse:
             u = form.cleaned_data["username"]
             p = form.cleaned_data["password"]
             if USUARIOS.get(u) == p:
-                # ✅ Seteamos la sesión real del Gestor
                 sesion.iniciarSesion(u, p)
-                gestor.sesion = sesion  # el gestor usa esta sesión
-
+                gestor.sesion = sesion 
                 resp = redirect("menu_principal")
                 _set_auth_cookie(resp, u)
                 return resp
@@ -98,11 +91,11 @@ def menu_principal_view(request: HttpRequest) -> HttpResponse:
 @requiere_login
 def opcionRegistrarResultado(request: HttpRequest) -> HttpResponse:
     return gestor.opcionRegistrarResultado(
-        lambda eventos: mostrarEventosSismicos(request, eventos)  # 👈 la Pantalla es quien muestra
+        lambda eventos: mostrarEventosSismicos(request, eventos)  
     )
 
 def mostrarEventosSismicos(request: HttpRequest, eventos: list[dict]) -> HttpResponse:
-    user = gestor.buscarUsuario()  # ← usar la sesión de dominio
+    user = gestor.buscarUsuario()
     return render(request, "redsismica/eventos.html", {
         "eventos": eventos,
         "user": user,
@@ -110,11 +103,9 @@ def mostrarEventosSismicos(request: HttpRequest, eventos: list[dict]) -> HttpRes
 
 @requiere_login
 def tomarSeleccionEventoSismico(request: HttpRequest, evento_id: int) -> HttpResponse:
-    # Esta view SOLO muestra (GET). Si llega un POST por error, redirige a acciones.
     if request.method == "POST":
         return redirect("evento_accion", evento_id=evento_id)
 
-    # GET → pasamos dos callbacks siguiendo tu secuencia
     return gestor.tomarSeleccionEventoSismico(
         evento_id,
         lambda datos: mostrarDetalleEvento(request, datos),
@@ -128,15 +119,12 @@ def tomarOpcionAccion(request: HttpRequest, evento_id: int) -> HttpResponse:
         return redirect("eventos")
 
     accion = (request.POST.get("accion") or "").strip().lower()
-
-    # Aseguramos que el gestor tenga seleccionado el evento
     gestor.tomarSeleccionEventoSismico(
         evento_id,
-        lambda _datos: None,   # no mostramos nada acá
-        lambda _payload: None  # no mostramos nada acá
+        lambda _datos: None,   
+        lambda _payload: None  
     )
 
-    # Ejecutamos la acción en el gestor
     ejecutada = gestor.tomarOpcionAccion(evento_id, accion)
 
     if accion == "modificar":
@@ -162,18 +150,13 @@ def mostrarDetalleEvento(request: HttpRequest, datos: dict) -> HttpResponse:
     if not series:
         ev = datos.get("evento")
         try:
-            # Si 'evento' es un objeto de dominio con atributo 'seriesTemporales'
             st_list = getattr(ev, "seriesTemporales", None)
             if st_list:
-                series = [st.getDatos() for st in st_list]    # usa SerieTemporal.getDatos()
+                series = [st.getDatos() for st in st_list]   
         except Exception:
             pass
-
-        # Si 'evento' ya viene como dict con seriesTemporales (dicts), las usamos igual
         if not series and isinstance(ev, dict) and "seriesTemporales" in ev:
             series = ev["seriesTemporales"]
-
-    # Si aún es None, que al menos sea lista
     if series is None:
         series = []
 

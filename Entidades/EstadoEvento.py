@@ -6,14 +6,56 @@ from typing import Optional
 from Entidades.CambioEstado import CambioEstado
 
 class EstadoEvento(ABC):
+    def adquirirDatos()-> None:
+        pass
+    def derivar()-> None:
+        pass
+    def confirmar()-> None:
+        pass
+    def rechazar()-> None:
+        pass
+    def cerrar()-> None:
+        pass
+    def controlarTiempo()-> None:
+        pass
+    def bloquear()-> None:
+        pass
 
-    def nombre(self) -> str:
-        # Por si alguien quiere pedir nombre() en lugar de NAME
-        return self.NAME
-    def bloquear(
-    ) -> None:
-        print("bloqueando")
 
+class AutoDetectado(EstadoEvento):
+    NAME = "AutoDetectado"
+    def controlarTiempo() -> None:
+        pass
+    def revisar() -> None:
+        pass
+
+class AutoConfirmado(EstadoEvento):
+    NAME = "AutoConfirmado"
+    def adquirirDatos()-> None:
+        pass
+
+class PendienteDeCierre(EstadoEvento):
+    NAME = "PendienteDeCierre"
+    def cerrar()-> None:
+        pass
+
+class Cerrado(EstadoEvento):
+    NAME = "Cerrado"
+
+class SinRevision(EstadoEvento):
+    NAME = "SinRevision"
+
+class ConfirmadoPorPersonal(EstadoEvento):
+    NAME = "ConfirmadoPorPersonal"
+    def adquirirDatos()-> None:
+        pass
+
+class Derivado(EstadoEvento):
+    NAME = "Derivado"
+    def confirmar()-> None:
+        pass
+    def rechazar()-> None:
+        pass
 
 class PteRevision(EstadoEvento):
     NAME = "PteRevision"
@@ -33,7 +75,7 @@ class PteRevision(EstadoEvento):
         return  BloqueadoEnRevision()
     
     def buscarCEActual(self, evento, fechaHora)-> None:
-        for c in evento.cambiosEstado:
+        for c in evento.cambiosEstado: 
             if c.esActual():
                 c.setFechaHoraFin(fechaHora)
 
@@ -51,7 +93,7 @@ class BloqueadoEnRevision(EstadoEvento):
     NAME = "BloqueadoEnRevision"
     def sosBloqueadoEnRevision(self) -> bool: return True
     def bloquear(self, evento, fecha_hora, responsable = None):
-        return super().bloquear(evento, fecha_hora, responsable)
+        pass
 
     def rechazar(self,evento: "EventoSismico",fechaHora: datetime,responsable: Optional[str] = None,
     ) -> None:
@@ -65,7 +107,7 @@ class BloqueadoEnRevision(EstadoEvento):
             evento.estadoActual = estado_rechazado
 
     def crearProxEstado(self)-> EstadoEvento:
-        return Rechazado
+        return Rechazado()
     
     def buscarCEActual(self, evento, fechaHora) -> None:
 
@@ -84,5 +126,5 @@ class BloqueadoEnRevision(EstadoEvento):
 
 class Rechazado(EstadoEvento):
     NAME = "Rechazado"
-    def rechazar():
+    def rechazar()-> None:
         pass

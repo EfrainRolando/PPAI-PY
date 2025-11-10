@@ -21,7 +21,7 @@ class SerieTemporal:
         self.fechaHoraFinRegistroMuestras = fechaHoraFinRegistroMuestras
         self.frecuenciaMuestreo = frecuenciaMuestreo
         self.muestras = list(muestras) if muestras else []
-        self.sismografo: Optional["Sismografo"] = None  # back-ref opcional
+        self.sismografo: Optional["Sismografo"] = None 
 
     def setSismografo(self, sismografo: "Sismografo") -> None:
         self.sismografo = sismografo
@@ -29,7 +29,7 @@ class SerieTemporal:
     def getDatos(self) -> Dict[str, Any]:
         codigo = None
         if self.sismografo:
-            # pide el código yendo Serie -> Sismógrafo -> Estación
+
             codigo = self.sismografo.sosDeMiSerie(self)
 
         return {

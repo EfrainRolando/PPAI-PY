@@ -45,14 +45,6 @@ class EventoSismico:
         self.cambioEstadoActual = cambioEstadoActual
         self.estadoActual = self.getEstadoActual()
 
-    # ---------- reglas locales ----------
-    # @property 
-    # def estadoActual(self):
-    #     return self.estadoActual
-    # @estadoActual.setter
-    # def estadoActual(self, estado: EstadoEvento):
-    #     self.estadoActual = estado
-
     def _nombre_de(self, estado_obj) -> str | None:
         if estado_obj is None:
             return None
@@ -86,7 +78,6 @@ class EventoSismico:
         return None
         
     def buscarSismosARevisar(self) -> bool:
-        # ⬇️ si el estado vigente es Rechazado, NO va a la lista
         if self.getEstadoActual() == "Rechazado":
             return False
 
@@ -113,7 +104,6 @@ class EventoSismico:
             "longitudEpicentro": self.longitudEpicentro,
             "latitudHipocentro": self.latitudHipocentro,
             "longitudHipocentro": self.longitudHipocentro,
-    # ANTES: "EstadoActual": self.getEstadoActual()
             "estadoActual": self.getEstadoActual(),
         }
 
@@ -127,7 +117,7 @@ class EventoSismico:
         self.cambioEstadoActual = cambio
         print("Cambio de estado actualizado!")
         print("Evento:", self.id_evento)
-        print("Estado Actual del Evento:", self.cambioEstadoActual.estado.nombre)
+        print("Estado Actual del Evento:", self.cambioEstadoActual.estado.NAME)
         print("Fecha Hora Inicio del Cambio de estado:", self.cambioEstadoActual.fechaHoraInicio)
         return cambio
 
@@ -162,15 +152,13 @@ class EventoSismico:
         },
         "magnitud": getattr(self, "valorMagnitud", None),
 
-        # 👉 Arrays para que la Pantalla itere
-        # Alcance y Origen: nombre + descripcion
-        "alcances": _as_array(getattr(self, "alcance", None)),  # usa alcance.getDatos()
-        "origenes": _as_array(getattr(self, "origenGeneracion", None)),  # usa origen.getDatos()
+        "alcances": _as_array(getattr(self, "alcance", None)),
+        "origenes": _as_array(getattr(self, "origenGeneracion", None)),  
 
-        # Clasificación: nombre + kmProfundidadDesde/Hasta (proyección)
+ 
         "clasificaciones": _as_array(getattr(self, "clasificacion", None), project=_project_clasif),
 
-        # Estado actual como string (o el dict que tu getEstadoActual retorne)
+    
         "estadoActual": self.getEstadoActual() or "(sin datos)",
     }
 

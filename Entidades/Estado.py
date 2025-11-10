@@ -7,7 +7,7 @@ except ImportError:
 
 
 class Estado:
-    # Disponibles siempre (no lazy). El Gestor puede iterar directo sobre estas listas.
+
     NOMBRES_POSIBLES: ClassVar[List[str]] = [
         "AutoDetectado",
         "PteRevision",
@@ -21,21 +21,20 @@ class Estado:
         "Cerrado",
     ]
 
-    def __init__(self, nombre: str):
-        # Sin validaciones ni normalizaciones
-        self.nombre = nombre
+    def __init__(self, NAME: str):
 
-    # ===== Métodos de clase: devolver listas tal cual =====
+        self.NAME = NAME
+
+
     @classmethod
     def nombres_posibles(cls) -> List[str]:
         return cls.NOMBRES_POSIBLES
-
-    # ---------- Métodos de clase que el Gestor va a llamar ----------
+    
     def sosBloqueadoEnRevision(self) -> bool:
-        return self.nombre == "BloqueadoEnRevision"
+        return self.NAME == "BloqueadoEnRevision"
 
     def sosAutoDetectado(self) -> bool:
-        return self.nombre == "AutoDetectado"
+        return self.NAME == "AutoDetectado"
 
     def sosPteRevision(self) -> bool:
-        return self.nombre == "PteRevision"
+        return self.NAME == "PteRevision"

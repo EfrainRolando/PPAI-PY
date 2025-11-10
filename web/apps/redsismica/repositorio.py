@@ -6,24 +6,16 @@ from .mappers import _Cache, to_dom_evento
 
 class RepositorioEventosDjango:
     def obtener_eventos(self) -> List[object]:
-    # ANTES:
-    # qs = (orm.EventoSismico.objects
-    #       .select_related("alcance","clasificacion","origen","estado_actual")
-    #       .prefetch_related("cambios__estado","series__muestras__detalles__tipoDato"))
-
-    # DESPUÉS (Añadimos "series__sismografo__estacion" al prefetch):
         qs = (orm.EventoSismico.objects
           .select_related("alcance","clasificacion","origen","estado_actual")
           .prefetch_related(
               "cambios__estado",
-              "series__sismografo__estacion",  # <-- AÑADIDO
+              "series__sismografo__estacion", 
               "series__muestras__detalles__tipoDato"
           ))
-    # ------------------------------------------------------------------
+
         cache = _Cache()
         return [to_dom_evento(e, cache) for e in qs]
-
-    # === Escrituras ===
 
 
     @transaction.atomic
@@ -36,7 +28,7 @@ class RepositorioEventosDjango:
 
         ahora = timezone.now()
 
-    # Cerrar el vigente (si lo hay)
+
         prev = ev.cambios.order_by("-fechaHoraInicio").first()
         if prev and prev.fechaHoraFin is None:
             prev.fechaHoraFin = ahora
@@ -44,7 +36,6 @@ class RepositorioEventosDjango:
 
             estado, _ = orm.Estado.objects.get_or_create(nombre=nuevo_estado)
 
-    # *** FIX: usar usuario=responsable (y sacar motivo si no existe en el modelo) ***
         orm.CambioEstado.objects.create(
             evento=ev, estado=estado, fechaHoraInicio=ahora,
             usuario=responsable
@@ -56,14 +47,13 @@ class RepositorioEventosDjango:
         return True
 
 
-    # helpers
+
     def bloquear_en_revision(self, id_evento: int, responsable: str = "sistema") -> bool:
         return self.cambiar_estado(id_evento, "BloqueadoEnRevision", responsable)
 
     def rechazar_evento(self, id_evento: int, responsable: str = "sistema", motivo: Optional[str] = None) -> bool:
         return self.cambiar_estado(id_evento, "Rechazado", responsable, motivo)
 
-# Fábrica singleton (si tu Gestor la usa)
 _singleton = None
 def repositorio_eventos_django():
     global _singleton
